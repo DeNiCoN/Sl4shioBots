@@ -1,92 +1,31 @@
+/*
+MIT License
+
+Copyright(c) 2019 DeNiCoN
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this softwareand associated documentation files(the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions :
+
+The above copyright noticeand this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #include "World.h"
 
 World::World(std::string uri) : uri(uri)
 {
-	mHandlers[Messages::ICodes::SETUP] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "setup";
-		endpoint.send(hdl, " ", websocketpp::frame::opcode::TEXT);
-	};
-	mHandlers[Messages::ICodes::START_PLAYING] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "start playing";
-	};
-	mHandlers[Messages::ICodes::GAME_OVER] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "game over";
-	};
-	mHandlers[Messages::ICodes::SPEC_ARROW] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "spec arrow";
-	};
-	mHandlers[Messages::ICodes::SYNC] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "sync";
-	};
-	mHandlers[Messages::ICodes::DAMAGE] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "damage";
-	};
-	mHandlers[Messages::ICodes::DESTROY_ARROW] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "destroy arrow";
-	};
-	mHandlers[Messages::ICodes::DASH_ARROW] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "dash arrow";
-	};
-	mHandlers[Messages::ICodes::DESTROY_GOOM] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "destroy goom";
-	};
-	mHandlers[Messages::ICodes::HIT_GOOM] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "hit goom";
-	};
-	mHandlers[Messages::ICodes::HIT_ARROW] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "hit arrow";
-	};
-	mHandlers[Messages::ICodes::RECOIL_ARROW] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "recoil arrow";
-	};
-	mHandlers[Messages::ICodes::EAT_GOO] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "eat goo";
-	};
-	mHandlers[Messages::ICodes::UPGRADES_AVAILABLE] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "upgrades available";
-	};
-	mHandlers[Messages::ICodes::SET_VISION] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "set vision";
-	};
-	mHandlers[Messages::ICodes::DASH] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "dash";
-	};
-	mHandlers[Messages::ICodes::DASH_COMBO] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "dash combo";
-	};
-	mHandlers[Messages::ICodes::SHIELD] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "shield";
-	};
-	mHandlers[Messages::ICodes::SHIELD_USED] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "shield used";
-	};
-	mHandlers[Messages::ICodes::KILL] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "kill";
-	};
-	mHandlers[Messages::ICodes::SET_LEADERBOARD] = [&](websocketpp::connection_hdl hdl, const char* payload)
-	{
-		std::cout << "set leaderboard";
-	};
 
 }
 
@@ -102,24 +41,17 @@ World::~World()
 void World::init()
 {
 	initialized = true;
-	endpoint.set_message_handler([&](websocketpp::connection_hdl hdl, client::message_ptr m)
-		{
-			const char* payload = m->get_payload().c_str();
-			mHandlers[(Messages::ICodes)(*payload)](hdl, payload + 1);
-		});
+
 	endpoint.set_open_handler(bind([&](client* c, websocketpp::connection_hdl hdl)
-		{
-			std::cout << "Successfully connected";
-			endpoint.send(hdl, " ", websocketpp::frame::opcode::TEXT);
-			
-
-		}, &endpoint, ::_1));
+	{
+		std::cout << "Successfully connected";
+		endpoint.send(hdl, " ", websocketpp::frame::opcode::TEXT);
+	}, &endpoint, ::_1));
 	endpoint.set_fail_handler(bind([&](client* c, websocketpp::connection_hdl hdl)
-		{
-			std::cout << "Failed to connect";
+	{
+		std::cout << "Failed to connect";
+	}, &endpoint, ::_1));
 
-
-		}, &endpoint, ::_1));
 	endpoint.init_asio();
 	endpoint.start_perpetual();
 	endpoint_thread = websocketpp::lib::make_shared<websocketpp::lib::thread>(&client::run, &endpoint);
@@ -127,7 +59,6 @@ void World::init()
 
 void World::update(std::chrono::duration<double> delta)
 {
-	
 }
 
 bool World::connect(Bot_ptr bot)
@@ -139,43 +70,210 @@ bool World::connect(Bot_ptr bot)
 		std::cout << ec.message();
 		return false;
 	}
+	bot->connection_hdl = connection->get_handle();
+	connection->set_message_handler([&, bot](websocketpp::connection_hdl hdl, client::message_ptr m)
+	{
+		const char* payload = m->get_payload().c_str();
+		switch ((Messages::Input::ICodes)*(payload++))
+		{
+		case 0: onSetup(bot, payload); break;
+		case 1: onStartPlaying(bot, payload); break;
+		case 2: onGameOver(bot, payload); break;
+		case 3: onSpecArrow(bot, payload); break;
+		case 4: onSync(bot, payload); break;
+		case 5: onDamage(bot, payload); break;
+		case 6: onDestroyArrow(bot, payload); break;
+		case 7: onDashArrow(bot, payload); break;
+		case 8: onDestroyGoom(bot, payload); break;
+		case 9: onHitGoom(bot, payload); break;
+		case 10: onHitArrow(bot, payload); break;
+		case 11: onRecoilArrow(bot, payload); break;
+		case 12: onEatGoo(bot, payload); break;
+		case 13: onUpgradesAvailable(bot, payload); break;
+		case 14: onSetVision(bot, payload); break;
+		case 15: onDash(bot, payload); break;
+		case 16: onDashCombo(bot, payload); break;
+		case 17: onShield(bot, payload); break;
+		case 18: onShieldUsed(bot, payload); break;
+		case 19: onKill(bot, payload); break;
+		case 20: onSetLeaderboard(bot, payload); break;
+		default:
+			std::cout << "unresolved code\n";
+			break;
+		}
+	});
+
 	endpoint.connect(connection);
-	hdls[connection->get_handle()] = bot;
 	return true;
 }
 
-size_t Messages::start(Arrows arrow, std::string name, std::iostream& stream)
+std::string Messages::setObsPos(vec2 coords)
 {
-	stream << (uint8_t)Messages::OCodes::START << (uint8_t)arrow << name;
-	return 3 + name.size();
+	std::string payload({ (uint8_t)Messages::Output::SET_OBS_POS });
+	payload += coords.x;
+	payload += coords.y;
+	return payload;
 }
 
-size_t Messages::leave(std::iostream& stream)
+std::string Messages::start(Arrows arrow, std::string name)
 {
-	stream << (uint8_t)Messages::OCodes::LEAVE;
-	return sizeof(uint8_t);
+	std::string payload({ (uint8_t)Messages::Output::START });
+	payload += (uint8_t)arrow;
+	payload += name;
+	return payload;
 }
 
-size_t Messages::setAngle(float angle, std::iostream& stream)
+std::string Messages::leave()
 {
-	stream << (uint8_t)Messages::OCodes::SET_MOVEMENT << angle;
-	return sizeof(uint8_t) + sizeof(float);
+	return { (uint8_t)Messages::Output::START };
 }
 
-size_t Messages::dash(float angle, std::iostream& stream)
+std::string Messages::setAngle(float angle)
 {
-	stream << (uint8_t)Messages::OCodes::DASH << angle;
-	return sizeof(uint8_t) + sizeof(float);
+	std::string payload({ (uint8_t)Messages::Output::SET_MOVEMENT });
+	payload += (float)angle;
+	return payload;
 }
 
-size_t Messages::shield(std::iostream& stream)
+std::string Messages::dash(float angle)
 {
-	stream << (uint8_t)Messages::OCodes::SHIELD;
-	return sizeof(uint8_t);
+	std::string payload({ (uint8_t)Messages::Output::DASH });
+	payload += (float)angle;
+	return payload;
 }
 
-size_t Messages::upgrade(Upgrades upgrade, std::iostream& stream)
+std::string Messages::shield()
 {
-	stream << (uint8_t)Messages::OCodes::UPGRADE << (uint8_t)upgrade;
-	return sizeof(uint8_t) + sizeof(uint8_t);
+	std::string payload;
+	payload += (uint8_t)Messages::Output::SHIELD;
+	return payload;
+}
+
+std::string Messages::upgrade(Upgrades upgrade)
+{
+	std::string payload({ (uint8_t)Messages::Output::START });
+	payload += (uint8_t)upgrade;
+	return payload;
+}
+
+void World::onSetup(Bot_ptr bot, const char* payload)
+{
+	std::cout << "setup";
+	bot->id = Messages::read<uint32_t>(&payload);
+	endpoint.send(bot->getConnectionHandle(), Messages::setObsPos(Messages::read<vec2>(&payload)), websocketpp::frame::opcode::BINARY);
+	endpoint.send(bot->getConnectionHandle(), Messages::start(Arrows::STANDART, "Test"), websocketpp::frame::opcode::BINARY);
+}
+void World::onStartPlaying(Bot_ptr bot, const char* payload)
+{
+	std::cout << "start playing";
+	bot->state.upgradesAvailable = Messages::read<uint8_t>(&payload);
+	bot->state.vision = Messages::read<float>(&payload);
+}
+
+void World::onGameOver(Bot_ptr bot, const char* payload)
+{
+	std::cout << "game over";
+	bot->stats.deaths++;
+}
+
+void World::onSpecArrow(Bot_ptr bot, const char* payload)
+{
+	std::cout << "spec arrow";
+}
+
+void World::onSync(Bot_ptr bot, const char* payload)
+{
+	std::cout << "sync";
+}
+
+void World::onDamage(Bot_ptr bot, const char* payload)
+{
+	std::cout << "damage";
+}
+
+void World::onDestroyArrow(Bot_ptr bot, const char* payload)
+{
+	std::cout << "destroy arrow";
+}
+
+void World::onDashArrow(Bot_ptr bot, const char* payload)
+{
+	std::cout << "dash arrow";
+}
+
+void World::onDestroyGoom(Bot_ptr bot, const char* payload)
+{
+	std::cout << "destroy goom";
+}
+
+void World::onHitGoom(Bot_ptr bot, const char* payload)
+{
+	std::cout << "hit goom";
+}
+
+void World::onHitArrow(Bot_ptr bot, const char* payload)
+{
+	std::cout << "hit arrow";
+}
+
+void World::onRecoilArrow(Bot_ptr bot, const char* payload)
+{
+	std::cout << "recoil arrow";
+}
+
+void World::onEatGoo(Bot_ptr bot, const char* payload)
+{
+	std::cout << "eat goo";
+	
+}
+
+void World::onUpgradesAvailable(Bot_ptr bot, const char* payload)
+{
+	std::cout << "upgrades available";
+	bot->state.upgradesAvailable = Messages::read<uint8_t>(&payload);
+}
+
+void World::onSetVision(Bot_ptr bot, const char* payload)
+{
+	std::cout << "set vision";
+	bot->state.vision = Messages::read<float>(&payload);
+}
+
+void World::onDash(Bot_ptr bot, const char* payload)
+{
+	std::cout << "dash";
+	bot->state.dashCooldown = Messages::read<uint32_t>(&payload);
+	bot->stats.dashes++;
+}
+
+void World::onDashCombo(Bot_ptr bot, const char* payload)
+{
+	std::cout << "dash combo";
+	if (bot->state.dashCombo = Messages::read<uint32_t>(&payload) > bot->stats.maxDashCombo)
+	{
+		bot->stats.maxDashCombo = bot->state.dashCombo;
+	}
+
+}
+
+void World::onShield(Bot_ptr bot, const char* payload)
+{
+	std::cout << "shield";
+}
+
+void World::onShieldUsed(Bot_ptr bot, const char* payload)
+{
+	bot->stats.shieldUsed++;
+	std::cout << "shield used";
+}
+
+void World::onKill(Bot_ptr bot, const char* payload)
+{
+	std::cout << "kill";
+	bot->stats.kills++;
+}
+
+void World::onSetLeaderboard(Bot_ptr bot, const char* payload)
+{
+	std::cout << "set leaderboard";
 }

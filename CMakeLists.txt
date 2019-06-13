@@ -8,6 +8,7 @@ add_executable(Sla4shioBot
 "Bot.cpp"
 "World.h"
 "World.cpp"
+"linearmath.h"
 )
 
 if(WIN32)

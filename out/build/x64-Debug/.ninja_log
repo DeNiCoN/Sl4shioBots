@@ -52,3 +52,12 @@
 28085	33165	581596409	Sla4shioBot.exe	3203a95898dd9b4c
 9	18871	581596517	CMakeFiles/Sla4shioBot.dir/Main.cpp.obj	849e8665d522ad76
 18902	23370	581596521	Sla4shioBot.exe	3203a95898dd9b4c
+114	1944	582058147	build.ninja	39d45f76e29c716
+415	6908	582058154	CMakeFiles/Sla4shioBot.dir/Bot.cpp.obj	57c2ac501ef14533
+4	22635	582058868	CMakeFiles/Sla4shioBot.dir/Main.cpp.obj	849e8665d522ad76
+8	8914	582058940	CMakeFiles/Sla4shioBot.dir/Main.cpp.obj	849e8665d522ad76
+10	12836	582058977	CMakeFiles/Sla4shioBot.dir/Main.cpp.obj	849e8665d522ad76
+7	14458	582059111	CMakeFiles/Sla4shioBot.dir/Main.cpp.obj	849e8665d522ad76
+9	8494	582059363	CMakeFiles/Sla4shioBot.dir/Main.cpp.obj	849e8665d522ad76
+48	22905	582059377	CMakeFiles/Sla4shioBot.dir/World.cpp.obj	85fa994edcd15da0
+22906	30678	582059383	Sla4shioBot.exe	32a0a0f210270ab4

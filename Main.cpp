@@ -36,12 +36,14 @@ SOFTWARE.
 #include <vector>
 #include <sstream>
 #include <chrono>
+#include "DefaultBehavior.h"
 
 using clk = std::chrono::high_resolution_clock;
 
 World world("ws://45.32.233.97:9000");
 std::stringstream messages;
 websocketpp::lib::mutex messages_mutex;
+DefaultBehavior beh;
 
 bool run = true;
 
@@ -65,8 +67,8 @@ void handleMessage(std::string message)
 	}
 	else if (message.substr(0, 7) == "connect")
 	{
-		Bot_ptr bot = Bot_ptr(new Bot(message.substr(9)));
-		world.connect(bot);
+			Bot_ptr bot = Bot_ptr(new Bot(message.substr(7), beh, world));
+			world.connect(bot);
 	}
 	else if (message.substr(0, 5) == "leave")
 	{

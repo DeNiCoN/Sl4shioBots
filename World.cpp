@@ -110,8 +110,8 @@ bool World::connect(Bot_ptr bot)
 std::string Messages::setObsPos(vec2 coords)
 {
 	std::string payload({ (uint8_t)Messages::Output::SET_OBS_POS });
-	payload += coords.x;
-	payload += coords.y;
+	payload += std::to_string(coords.x);
+	payload += std::to_string(coords.y);
 	return payload;
 }
 
@@ -138,7 +138,7 @@ std::string Messages::setAngle(float angle)
 std::string Messages::dash(float angle)
 {
 	std::string payload({ (uint8_t)Messages::Output::DASH });
-	payload += (float)angle;
+	payload += std::to_string(angle);
 	return payload;
 }
 
@@ -161,13 +161,14 @@ void World::onSetup(Bot_ptr bot, const char* payload)
 	std::cout << "setup";
 	bot->id = Messages::read<uint32_t>(&payload);
 	endpoint.send(bot->getConnectionHandle(), Messages::setObsPos(Messages::read<vec2>(&payload)), websocketpp::frame::opcode::BINARY);
-	endpoint.send(bot->getConnectionHandle(), Messages::start(Arrows::STANDART, "Test"), websocketpp::frame::opcode::BINARY);
+	endpoint.send(bot->getConnectionHandle(), Messages::start(Arrows::STANDART, bot->getName()), websocketpp::frame::opcode::BINARY);
 }
 void World::onStartPlaying(Bot_ptr bot, const char* payload)
 {
 	std::cout << "start playing";
 	bot->state.upgradesAvailable = Messages::read<uint8_t>(&payload);
 	bot->state.vision = Messages::read<float>(&payload);
+	bot->behavior.onPlayingStart(bot);
 }
 
 void World::onGameOver(Bot_ptr bot, const char* payload)
@@ -183,6 +184,9 @@ void World::onSpecArrow(Bot_ptr bot, const char* payload)
 
 void World::onSync(Bot_ptr bot, const char* payload)
 {
+	float levelRatio = Messages::read<float>(&payload);
+	uint32_t leaderId = Messages::read<uint32_t>(&payload);
+	vec2 pos = Messages::read<vec2>(&payload);
 	std::cout << "sync";
 }
 

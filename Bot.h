@@ -21,15 +21,33 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
+#pragma once
+#define _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
+#define _WEBSOCKETPP_CPP11_TYPE_TRAITS_
+#define ASIO_STANDALONE
 #include <memory>
 #include <string>
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
 #include <ctype.h>
 
+
+
+enum Arrows
+{
+	STANDART = 0
+};
+
+enum Upgrades
+{
+
+};
+
 class Bot;
 class World;
+class VBehavior;
+
+using Bot_ptr = std::shared_ptr<Bot>;
 
 struct BotStats
 {
@@ -51,29 +69,42 @@ struct BotState
 	unsigned int dashCombo;
 	float vision;
 	uint8_t upgradesAvailable;
+	Arrows arrow;
+
 };
 
-class Behavior
+class GameView
 {
+public:
+	void sync(const char* payload);
+private:
 
 };
-
-
-using Bot_ptr = std::shared_ptr<Bot>;
 
 class Bot
 {
 	friend class World;
 public:
-	Bot(std::string name) : name(name) {}
+	Bot(std::string name, VBehavior& behavior, World& world) : name(name), behavior(behavior), world(world) {}
 	std::string getName() const { return name; }
 	websocketpp::connection_hdl getConnectionHandle() const { return connection_hdl; }
-
+	void setAngle(float angle);
+	void dash(float angle);
+	void shield();
+	void upgrade(Upgrades upgrade);
 private:
 	BotStats stats;
 	BotState state;
 	websocketpp::connection_hdl connection_hdl;
 	std::string name;
 	uint32_t id;
-	Behavior behavior;
+	VBehavior& behavior;
+	World& world;
+};
+
+
+class VBehavior
+{
+public:
+	void virtual onPlayingStart(Bot_ptr bot) = 0;
 };

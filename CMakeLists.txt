@@ -9,6 +9,10 @@ add_executable(Sla4shioBot
 "World.h"
 "World.cpp"
 "linearmath.h"
+"DefaultBehavior.h"
+"DefaultBehavior.cpp"
+"GameView.h"
+"GameView.cpp"
 )
 
 if(WIN32)

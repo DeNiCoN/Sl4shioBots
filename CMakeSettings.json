@@ -5,12 +5,18 @@
       "generator": "Ninja",
       "configurationType": "Debug",
       "inheritEnvironments": [ "msvc_x64_x64" ],
-      "buildRoot": "${projectDir}\\out\\build\\${name}",
-      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "buildRoot": "${projectDir}\\..\\out\\build\\${name}",
+      "installRoot": "${projectDir}/../out/install/${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
-      "variables": []
+      "variables": [
+        {
+          "name": "CMAKE_INSTALL_PREFIX",
+          "value": "E:/Dropbox/Dropbox/Cworkplace/Sl4shioBots/../out/install/x64-Debug",
+          "type": "PATH"
+        }
+      ]
     }
   ]
 }

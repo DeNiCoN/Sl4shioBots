@@ -25,7 +25,6 @@ SOFTWARE.
 #define _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
 #define _WEBSOCKETPP_CPP11_TYPE_TRAITS_
 #define ASIO_STANDALONE
-#include "Bot.h"
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -36,21 +35,14 @@ SOFTWARE.
 #include <websocketpp/common/memory.hpp>
 #include <chrono>
 #include "linearmath.h"
+#include "Bot.h"
 
 typedef websocketpp::client<websocketpp::config::asio_client> client;
 
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 
-enum Arrows
-{
-	STANDART = 0
-};
 
-enum Upgrades
-{
-	
-};
 
 namespace Messages
 {
@@ -116,6 +108,7 @@ namespace Messages
 
 class World
 {
+	friend class Bot;
 public:
 	World(std::string uri);
 	~World();

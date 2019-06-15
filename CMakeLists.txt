@@ -3,16 +3,16 @@ cmake_minimum_required(VERSION 3.14)
 add_subdirectory(lib/websocketpp-master)
 
 add_executable(Sla4shioBot
-"Main.cpp"
-"Bot.h"
-"Bot.cpp"
-"World.h"
-"World.cpp"
-"linearmath.h"
-"DefaultBehavior.h"
-"DefaultBehavior.cpp"
-"GameView.h"
-"GameView.cpp"
+"src/Main.cpp"
+"src/Bot.h"
+"src/Bot.cpp"
+"src/World.h"
+"src/World.cpp"
+"src/linearmath.h"
+"src/DefaultBehavior.h"
+"src/DefaultBehavior.cpp"
+"src/GameView.h"
+"src/GameView.cpp"
 )
 
 if(WIN32)

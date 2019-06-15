@@ -1,6 +1,4 @@
 /*
-MIT License
-
 Copyright(c) 2019 DeNiCoN
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -102,4 +100,5 @@ int main()
 	}
 
 	console_thread.join();
+	return 0;
 }

@@ -35,6 +35,7 @@ World::~World()
 	{
 		endpoint.stop_perpetual();
 		endpoint_thread->join();
+		activeBots.clear();
 	}
 }
 

@@ -73,14 +73,6 @@ struct BotState
 
 };
 
-class GameView
-{
-public:
-	void sync(const char* payload);
-private:
-
-};
-
 class Bot
 {
 	friend class World;

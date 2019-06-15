@@ -67,8 +67,8 @@ void handleMessage(std::string message)
 	}
 	else if (message.substr(0, 7) == "connect")
 	{
-			Bot_ptr bot = Bot_ptr(new Bot(message.substr(7), beh, world));
-			world.connect(bot);
+		Bot_ptr bot = Bot_ptr(new Bot(message.substr(7), beh, world));
+		world.connect(bot);
 	}
 	else if (message.substr(0, 5) == "leave")
 	{

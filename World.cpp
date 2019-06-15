@@ -111,8 +111,8 @@ bool World::connect(Bot_ptr bot)
 std::string Messages::setObsPos(vec2 coords)
 {
 	std::string payload({ (uint8_t)Messages::Output::SET_OBS_POS });
-	payload += std::to_string(coords.x);
-	payload += std::to_string(coords.y);
+	payload.append((const char*)&coords.x, sizeof(float));
+	payload.append((const char*)&coords.y, sizeof(float));
 	return payload;
 }
 
@@ -132,22 +132,20 @@ std::string Messages::leave()
 std::string Messages::setAngle(float angle)
 {
 	std::string payload({ (uint8_t)Messages::Output::SET_MOVEMENT });
-	payload += (float)angle;
+	payload.append((const char*)& angle, sizeof(float));
 	return payload;
 }
 
 std::string Messages::dash(float angle)
 {
 	std::string payload({ (uint8_t)Messages::Output::DASH });
-	payload += std::to_string(angle);
+	payload.append((const char*)& angle, sizeof(float));
 	return payload;
 }
 
 std::string Messages::shield()
 {
-	std::string payload;
-	payload += (uint8_t)Messages::Output::SHIELD;
-	return payload;
+	return { (uint8_t)Messages::Output::SHIELD };
 }
 
 std::string Messages::upgrade(Upgrades upgrade)

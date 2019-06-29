@@ -28,6 +28,7 @@ SOFTWARE.
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
 #include <ctype.h>
+#include "GameView.h"
 
 
 
@@ -61,6 +62,7 @@ struct BotStats
 
 struct BotState
 {
+	vec2 position;
 	unsigned int exp;
 	unsigned int lvl;
 	unsigned int dashCooldown;
@@ -71,17 +73,31 @@ struct BotState
 
 };
 
+class VBehavior
+{
+	friend class Bot;
+public:
+	virtual ~VBehavior() {}
+	void virtual onPlayingStart() = 0;
+	void virtual update(std::chrono::duration<double> delta) = 0;
+protected:
+	Bot* bot;
+};
+
 class Bot
 {
 	friend class World;
 public:
-	Bot(std::string name, VBehavior& behavior, World& world) : name(name), behavior(behavior), world(world) {}
+	Bot(std::string name, VBehavior& behavior, World& world) : name(name), behavior(behavior), world(world), view(world) { behavior.bot = this; }
 	std::string getName() const { return name; }
 	websocketpp::connection_hdl getConnectionHandle() const { return connection_hdl; }
 	void setAngle(float angle);
 	void dash(float angle);
 	void shield();
 	void upgrade(Upgrades upgrade);
+
+	const GameView& getGameView() const { return view; }
+	const BotState& getBotState() const { return state; }
 private:
 	BotStats stats;
 	BotState state;
@@ -90,11 +106,5 @@ private:
 	uint32_t id;
 	VBehavior& behavior;
 	World& world;
-};
-
-
-class VBehavior
-{
-public:
-	void virtual onPlayingStart(Bot_ptr bot) = 0;
+	GameView view;
 };

@@ -9,6 +9,8 @@ add_executable(Sla4shioBot
 "src/World.h"
 "src/World.cpp"
 "src/linearmath.h"
+"src/poolAlloc.c"
+"src/poolAlloc.h"
 "src/DefaultBehavior.h"
 "src/DefaultBehavior.cpp"
 "src/GameView.h"

@@ -24,5 +24,9 @@ SOFTWARE.
 
 class DefaultBehavior : public VBehavior
 {
-	virtual void onPlayingStart(Bot_ptr bot) override;
+	virtual void onPlayingStart() override;
+	virtual void update(std::chrono::duration<double> delta) override;
+private:
+	std::chrono::duration<double> delay;
+	std::chrono::duration<double> updateDelay{ 1.0 };
 };

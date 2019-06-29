@@ -19,7 +19,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 #define _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
 #define _WEBSOCKETPP_CPP11_TYPE_TRAITS_
 #define ASIO_STANDALONE
@@ -65,8 +64,11 @@ void handleMessage(std::string message)
 	}
 	else if (message.substr(0, 7) == "connect")
 	{
-		Bot_ptr bot = Bot_ptr(new Bot(message.substr(7), beh, world));
-		world.connect(bot);
+		for (int i = 0; i < 1; i++)
+		{
+			Bot_ptr bot = Bot_ptr(new Bot(message.substr(7), beh, world));
+			world.connect(bot);
+		}
 	}
 	else if (message.substr(0, 5) == "leave")
 	{

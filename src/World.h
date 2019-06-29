@@ -34,12 +34,13 @@ SOFTWARE.
 #include <chrono>
 #include "linearmath.h"
 #include "Bot.h"
+#include <list>
+
 
 typedef websocketpp::client<websocketpp::config::asio_client> client;
 
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
-
 
 
 namespace Messages
@@ -104,6 +105,9 @@ namespace Messages
 
 }
 
+class Goom;
+class Arrow;
+
 class World
 {
 	friend class Bot;
@@ -113,12 +117,15 @@ public:
 	void init();
 	void update(std::chrono::duration<double> delta);
 	bool connect(Bot_ptr bot);
+
+
 private:
 	bool initialized = false;
 	websocketpp::lib::shared_ptr<websocketpp::lib::thread> endpoint_thread;
 	client endpoint;
 	std::string uri;
 	std::vector<Bot_ptr> activeBots;
+	std::list<client::message_ptr> messagesQueue;
 
 	void onSetup(Bot_ptr bot, const char* payload);
 	void onStartPlaying(Bot_ptr bot, const char* payload);

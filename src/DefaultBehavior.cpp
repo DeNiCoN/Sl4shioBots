@@ -22,7 +22,20 @@ SOFTWARE.
 
 #include "DefaultBehavior.h"
 
-void DefaultBehavior::onPlayingStart(Bot_ptr bot)
+void DefaultBehavior::onPlayingStart()
 {
 	bot->setAngle(0);
+}
+
+void DefaultBehavior::update(std::chrono::duration<double> delta)
+{
+	delay += delta;
+	if (delay > updateDelay)
+	{
+		std::cout << "update\n";
+		delay = std::chrono::duration<double>(0);
+		const Goom* goom = bot->getGameView().nearestGoom({ 0.f, 0.f });
+		if (goom)
+			bot->dash(atanf(goom->getPosition().y / goom->getPosition().x));
+	}
 }

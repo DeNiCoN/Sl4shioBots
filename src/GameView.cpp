@@ -20,43 +20,78 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include "GameView.h"
+#include "World.h"
+#include <algorithm>
+
+const Goom* GameView::nearestGoom(vec2 position) const
+{
+	auto goom = std::min_element(gooms.begin(), gooms.end(), [position](std::pair<unsigned int, Goom*> left, std::pair<unsigned int, Goom*> right) -> bool
+		{
+			return vec2LengthSquared(vec2Sub(left.second->getPosition(), position)) < vec2LengthSquared(vec2Sub(right.second->getPosition(), position));
+		});
+	return (*goom).second;
+}
 
 void GameView::sync(const char* payload)
 {
 	//goo's
-	for (int i = 0; i < Messages::read<uint32_t>(&payload); i++)
+	unsigned int n = Messages::read<uint32_t>(&payload);
+	for (unsigned int i = 0; i < n; i++)
 	{	//new goo
 		uint32_t id = Messages::read<uint32_t>(&payload);
 		vec2 position = Messages::read<vec2>(&payload);
+
 	}
-	for (int i = 0; i < Messages::read<uint32_t>(&payload); i++)
+	n = Messages::read<uint32_t>(&payload);
+	for (unsigned int i = 0; i < n; i++)
 	{	//goo went out of screen
 		uint32_t id = Messages::read<uint32_t>(&payload);
+
+
 	}
 
 	//gooms
-	for (int i = 0; i < Messages::read<uint32_t>(&payload); i++)
+	n = Messages::read<uint32_t>(&payload);
+	for (unsigned int i = 0; i < n; i++)
 	{	//goom went out of screen
-
+		uint32_t id = Messages::read<uint32_t>(&payload);
+		poolFree(&goomAlloc, gooms[id]);
+		gooms.erase(id);
 	}
-	for (int i = 0; i < Messages::read<uint32_t>(&payload); i++)
+	n = Messages::read<uint32_t>(&payload);
+	for (unsigned int i = 0; i < n; i++)
 	{	//new goom
+		uint32_t id = Messages::read<uint32_t>(&payload);
+		auto g = gooms.find(id);
+		if (g == gooms.end())
+		{
+			Goom* goom = new (poolAlloc(&goomAlloc)) Goom();
+			goom->size = Messages::read<float>(&payload);
+			goom->sync(&payload);
+			gooms[id] = goom;
+		}
+		else
+		{
+			g->second->sync(&payload);
+		}
 
 	}
 
 	//arrows
-	for (int i = 0; i < Messages::read<uint32_t>(&payload); i++)
+	for (unsigned int i = 0; i < Messages::read<uint32_t>(&payload); i++)
 	{	
 
 	}
 
 }
 
-void Goom::sync(const char* payload)
+void Goom::sync(const char** payload)
 {
-
+	this->position = Messages::read<vec2>(payload);
+	this->velocity = Messages::read<vec2>(payload);
+	this->hp = Messages::read<float>(payload);
 }
 
-void Arrow::sync(const char* payload)
+void Arrow::sync(const char** payload)
 {
 }

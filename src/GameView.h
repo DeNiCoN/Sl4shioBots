@@ -19,32 +19,66 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#pragma once
 #include <list>
 #include "linearmath.h"
-#include "World.h"
+#include <vector>
+#include <unordered_map>
+#include "poolAlloc.h"
+
+
+#define ALLOCATOR_MAX_GOOM_OBJECTS 64
+#define ALLOCATOR_MAX_ARROW_OBJECTS 128
+
+class World;
+class GameView;
 
 class Entity
 {
-	void virtual sync(const char* payload) = 0;
+	void virtual sync(const char** payload) = 0;
 };
 
 class Goom : public Entity
 {
+	friend class GameView;
+public:
+	vec2 getPosition() const { return position; }
+	vec2 getVelocity() const { return velocity; }
+	float getHP() const { return hp; }
+private:
 	vec2 position;
-	void virtual sync(const char* payload);
+	vec2 velocity;
+	float hp;
+	float size;
+	void virtual sync(const char** payload);
 };
 
 class Arrow : public Entity
 {
-	void virtual sync(const char* payload);
+	friend class GameView;
+	void virtual sync(const char** payload);
 };
 
 class GameView
 {
 	friend class World;
 public:
-	GameView(World& world) : world(world) {}
+	GameView(World& world) : world(world) 
+	{
+		poolInit(&goomAlloc, new char[ALLOCATOR_MAX_GOOM_OBJECTS * sizeof(Goom)], sizeof(Goom), ALLOCATOR_MAX_GOOM_OBJECTS);
+		poolInit(&arrowAlloc, new char[ALLOCATOR_MAX_ARROW_OBJECTS * sizeof(Arrow)], sizeof(Arrow), ALLOCATOR_MAX_ARROW_OBJECTS);
+	}
+	~GameView()
+	{
+		delete[] goomAlloc.buffer;
+		delete[] arrowAlloc.buffer;
+	}
+	const Goom* nearestGoom(vec2 position) const;
 private:
+	PoolAllocator arrowAlloc;
+	PoolAllocator goomAlloc;
 	void sync(const char* payload);
+	std::unordered_map<uint32_t, Goom*> gooms;
+	std::unordered_map<uint32_t, Arrow*> arrows;
 	World& world;
 };

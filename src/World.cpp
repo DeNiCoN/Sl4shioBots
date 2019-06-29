@@ -20,7 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include "GameView.h"
 #include "World.h"
+
 
 World::World(std::string uri) : uri(uri)
 {
@@ -58,6 +60,10 @@ void World::init()
 
 void World::update(std::chrono::duration<double> delta)
 {
+	for (auto bot : activeBots)
+	{
+		bot->behavior.update(delta);
+	}
 }
 
 bool World::connect(Bot_ptr bot)
@@ -165,13 +171,16 @@ void World::onStartPlaying(Bot_ptr bot, const char* payload)
 	std::cout << "start playing";
 	bot->state.upgradesAvailable = Messages::read<uint8_t>(&payload);
 	bot->state.vision = Messages::read<float>(&payload);
-	bot->behavior.onPlayingStart(bot);
+	activeBots.push_back(bot);
+	bot->behavior.onPlayingStart();
 }
 
 void World::onGameOver(Bot_ptr bot, const char* payload)
 {
 	std::cout << "game over";
+	activeBots.erase(std::find(activeBots.begin(), activeBots.end(), bot));
 	bot->stats.deaths++;
+	endpoint.send(bot->getConnectionHandle(), Messages::start(Arrows::STANDART, bot->getName()), websocketpp::frame::opcode::BINARY);
 }
 
 void World::onSpecArrow(Bot_ptr bot, const char* payload)
@@ -184,7 +193,7 @@ void World::onSync(Bot_ptr bot, const char* payload)
 	float levelRatio = Messages::read<float>(&payload);
 	uint32_t leaderId = Messages::read<uint32_t>(&payload);
 	vec2 pos = Messages::read<vec2>(&payload);
-	std::cout << "sync";
+	bot->view.sync(payload);
 }
 
 void World::onDamage(Bot_ptr bot, const char* payload)

@@ -40,7 +40,6 @@ using clk = std::chrono::high_resolution_clock;
 World world("ws://45.32.233.97:9000");
 std::stringstream messages;
 websocketpp::lib::mutex messages_mutex;
-DefaultBehavior beh;
 
 bool run = true;
 
@@ -49,7 +48,7 @@ void consoleReader()
 	std::string message;
 	while (run)
 	{
-		std::cin >> message;
+		std::getline(std::cin, message);
 		messages_mutex.lock();
 		messages << message;
 		messages_mutex.unlock();
@@ -58,19 +57,26 @@ void consoleReader()
 
 void handleMessage(std::string message)
 {
-	if (message == "quit")
+	std::string mes;
+	std::stringstream stream(message);
+	stream >> mes;
+	if (mes == "quit")
 	{
 		run = false;
 	}
-	else if (message.substr(0, 7) == "connect")
+	else if (mes == "connect")
 	{
-		for (int i = 0; i < 1; i++)
+		int n;
+		stream >> n;
+		for (int i = 0; i < n; i++)
 		{
-			Bot_ptr bot = Bot_ptr(new Bot(message.substr(7), beh, world));
+			std::string name;
+			stream >> name;
+			Bot_ptr bot = Bot_ptr(new Bot(name , *(new DefaultBehavior()), world));
 			world.connect(bot);
 		}
 	}
-	else if (message.substr(0, 5) == "leave")
+	else if (mes.substr(0, 5) == "leave")
 	{
 
 	}
@@ -79,6 +85,7 @@ void handleMessage(std::string message)
 int main() 
 {
 	world.init();
+	std::cout << "Enter connect [count] [names] to connect bots" << '\n';
 	auto console_thread = websocketpp::lib::thread(consoleReader);
 	std::string message;
 
@@ -91,7 +98,7 @@ int main()
 		delta = current - last;
 		if (messages.rdbuf()->in_avail() != 0 && messages_mutex.try_lock())
 		{
-			messages >> message;
+			std::getline(messages, message);
 			messages_mutex.unlock();
 			handleMessage(message);
 		}

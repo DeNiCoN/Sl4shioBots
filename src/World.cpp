@@ -43,6 +43,9 @@ void World::init()
 {
 	initialized = true;
 
+	endpoint.clear_access_channels(websocketpp::log::alevel::all);
+	endpoint.clear_error_channels(websocketpp::log::elevel::all);
+
 	endpoint.set_open_handler(bind([&](client* c, websocketpp::connection_hdl hdl)
 	{
 		std::cout << "Successfully connected";
@@ -60,8 +63,29 @@ void World::init()
 
 void World::update(std::chrono::duration<double> delta)
 {
+	while (!messagesQueue.empty())
+	{
+		messageQueueMutex.lock();
+		auto m = messagesQueue.front();
+		messagesQueue.pop_front();
+		messageQueueMutex.unlock();
+		handleMessage(m);
+	}
+
 	for (auto bot : activeBots)
 	{
+		/*
+		if(bot->view.main)
+			if (bot->view.main->cooldown > 0)
+			{
+				bot->view.main->cooldown -= delta.count();
+			}
+			else
+			{
+				bot->view.main->attackReady = true;
+			}
+		*/
+		if (bot->view.main)
 		bot->behavior.update(delta);
 	}
 }
@@ -78,34 +102,9 @@ bool World::connect(Bot_ptr bot)
 	bot->connection_hdl = connection->get_handle();
 	connection->set_message_handler([&, bot](websocketpp::connection_hdl hdl, client::message_ptr m)
 	{
-		const char* payload = m->get_payload().c_str();
-		switch ((Messages::Input::ICodes)*(payload++))
-		{
-		case 0: onSetup(bot, payload); break;
-		case 1: onStartPlaying(bot, payload); break;
-		case 2: onGameOver(bot, payload); break;
-		case 3: onSpecArrow(bot, payload); break;
-		case 4: onSync(bot, payload); break;
-		case 5: onDamage(bot, payload); break;
-		case 6: onDestroyArrow(bot, payload); break;
-		case 7: onDashArrow(bot, payload); break;
-		case 8: onDestroyGoom(bot, payload); break;
-		case 9: onHitGoom(bot, payload); break;
-		case 10: onHitArrow(bot, payload); break;
-		case 11: onRecoilArrow(bot, payload); break;
-		case 12: onEatGoo(bot, payload); break;
-		case 13: onUpgradesAvailable(bot, payload); break;
-		case 14: onSetVision(bot, payload); break;
-		case 15: onDash(bot, payload); break;
-		case 16: onDashCombo(bot, payload); break;
-		case 17: onShield(bot, payload); break;
-		case 18: onShieldUsed(bot, payload); break;
-		case 19: onKill(bot, payload); break;
-		case 20: onSetLeaderboard(bot, payload); break;
-		default:
-			std::cout << "unresolved code\n";
-			break;
-		}
+		messageQueueMutex.lock();
+		messagesQueue.push_back(std::make_pair(bot, m));
+		messageQueueMutex.unlock();
 	});
 
 	endpoint.connect(connection);
@@ -130,7 +129,7 @@ std::string Messages::start(Arrows arrow, std::string name)
 
 std::string Messages::leave()
 {
-	return { (uint8_t)Messages::Output::START };
+	return { (uint8_t)Messages::Output::LEAVE };
 }
 
 std::string Messages::setAngle(float angle)
@@ -154,17 +153,51 @@ std::string Messages::shield()
 
 std::string Messages::upgrade(Upgrades upgrade)
 {
-	std::string payload({ (uint8_t)Messages::Output::START });
+	std::string payload({ (uint8_t)Messages::Output::UPGRADE });
 	payload += (uint8_t)upgrade;
 	return payload;
+}
+
+void World::handleMessage(std::pair<Bot_ptr, client::message_ptr> entry)
+{
+	Bot_ptr bot = entry.first;
+	const char* payload = entry.second->get_payload().c_str();
+	switch ((Messages::Input::ICodes) * (payload++))
+	{
+	case 0: onSetup(bot, payload); break;
+	case 1: onStartPlaying(bot, payload); break;
+	case 2: onGameOver(bot, payload); break;
+	case 3: onSpecArrow(bot, payload); break;
+	case 4: onSync(bot, payload); break;
+	case 5: onDamage(bot, payload); break;
+	case 6: onDestroyArrow(bot, payload); break;
+	case 7: onDashArrow(bot, payload); break;
+	case 8: onDestroyGoom(bot, payload); break;
+	case 9: onHitGoom(bot, payload); break;
+	case 10: onHitArrow(bot, payload); break;
+	case 11: onRecoilArrow(bot, payload); break;
+	case 12: onEatGoo(bot, payload); break;
+	case 13: onUpgradesAvailable(bot, payload); break;
+	case 14: onSetVision(bot, payload); break;
+	case 15: onDash(bot, payload); break;
+	case 16: onDashCombo(bot, payload); break;
+	case 17: onShield(bot, payload); break;
+	case 18: onShieldUsed(bot, payload); break;
+	case 19: onKill(bot, payload); break;
+	case 20: onSetLeaderboard(bot, payload); break;
+	default:
+		std::cout << "unresolved code\n";
+		break;
+	}
 }
 
 void World::onSetup(Bot_ptr bot, const char* payload)
 {
 	std::cout << "setup";
 	bot->id = Messages::read<uint32_t>(&payload);
+	bot->view.id = bot->id;
 	endpoint.send(bot->getConnectionHandle(), Messages::setObsPos(Messages::read<vec2>(&payload)), websocketpp::frame::opcode::BINARY);
-	endpoint.send(bot->getConnectionHandle(), Messages::start(Arrows::STANDART, bot->getName()), websocketpp::frame::opcode::BINARY);
+	endpoint.send(bot->getConnectionHandle(), Messages::start((Arrows)(rand() % 6), bot->getName()), websocketpp::frame::opcode::BINARY);
 }
 void World::onStartPlaying(Bot_ptr bot, const char* payload)
 {
@@ -178,9 +211,11 @@ void World::onStartPlaying(Bot_ptr bot, const char* payload)
 void World::onGameOver(Bot_ptr bot, const char* payload)
 {
 	std::cout << "game over";
+
 	activeBots.erase(std::find(activeBots.begin(), activeBots.end(), bot));
+	bot->view.reset();
 	bot->stats.deaths++;
-	endpoint.send(bot->getConnectionHandle(), Messages::start(Arrows::STANDART, bot->getName()), websocketpp::frame::opcode::BINARY);
+	endpoint.send(bot->getConnectionHandle(), Messages::start((Arrows)(rand() % 6), bot->getName()), websocketpp::frame::opcode::BINARY);
 }
 
 void World::onSpecArrow(Bot_ptr bot, const char* payload)
@@ -193,6 +228,7 @@ void World::onSync(Bot_ptr bot, const char* payload)
 	float levelRatio = Messages::read<float>(&payload);
 	uint32_t leaderId = Messages::read<uint32_t>(&payload);
 	vec2 pos = Messages::read<vec2>(&payload);
+	bot->view.leaderPos = pos;
 	bot->view.sync(payload);
 }
 
@@ -204,6 +240,8 @@ void World::onDamage(Bot_ptr bot, const char* payload)
 void World::onDestroyArrow(Bot_ptr bot, const char* payload)
 {
 	std::cout << "destroy arrow";
+	uint32_t id = Messages::read<uint32_t>(&payload);
+	bot->view.destroyArrow(id);
 }
 
 void World::onDashArrow(Bot_ptr bot, const char* payload)
@@ -214,6 +252,8 @@ void World::onDashArrow(Bot_ptr bot, const char* payload)
 void World::onDestroyGoom(Bot_ptr bot, const char* payload)
 {
 	std::cout << "destroy goom";
+	uint32_t id = Messages::read<uint32_t>(&payload);
+	bot->view.destroyGoom(id);
 }
 
 void World::onHitGoom(Bot_ptr bot, const char* payload)
@@ -240,7 +280,7 @@ void World::onEatGoo(Bot_ptr bot, const char* payload)
 void World::onUpgradesAvailable(Bot_ptr bot, const char* payload)
 {
 	std::cout << "upgrades available";
-	bot->state.upgradesAvailable = Messages::read<uint8_t>(&payload);
+	bot->behavior.onUpgradeAvailable(Messages::read<uint8_t>(&payload));
 }
 
 void World::onSetVision(Bot_ptr bot, const char* payload)
@@ -252,13 +292,16 @@ void World::onSetVision(Bot_ptr bot, const char* payload)
 void World::onDash(Bot_ptr bot, const char* payload)
 {
 	std::cout << "dash";
-	bot->state.dashCooldown = Messages::read<uint32_t>(&payload);
+	//bot->view.main->cooldown = Messages::read<uint32_t>(&payload);
+	//bot->view.main->attackReady = false;
 	bot->stats.dashes++;
 }
 
 void World::onDashCombo(Bot_ptr bot, const char* payload)
 {
 	std::cout << "dash combo";
+	//bot->view.main->cooldown = 0;
+	//bot->view.main->attackReady = true;
 	if (bot->state.dashCombo = Messages::read<uint32_t>(&payload) > bot->stats.maxDashCombo)
 	{
 		bot->stats.maxDashCombo = bot->state.dashCombo;

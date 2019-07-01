@@ -31,7 +31,7 @@ void Bot::setAngle(float angle)
 
 void Bot::dash(float angle)
 {
-	world.endpoint.send(connection_hdl, Messages::setAngle(angle), websocketpp::frame::opcode::BINARY);
+	world.endpoint.send(connection_hdl, Messages::dash(angle), websocketpp::frame::opcode::BINARY);
 }
 
 void Bot::shield()

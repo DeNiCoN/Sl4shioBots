@@ -33,6 +33,26 @@ SOFTWARE.
 class World;
 class GameView;
 
+enum Arrows
+{
+	BLUE = 0,
+	SCOUT = 1,
+	FROZEN = 2,
+	FLAME = 3,
+	CRUISER = 4,
+	ASSASIN = 5
+};
+
+enum Upgrades
+{
+	Q = 0,
+	W = 1,
+	E = 2,
+	R = 3,
+	A = 4,
+	S = 5
+};
+
 class Entity
 {
 	void virtual sync(const char** payload) = 0;
@@ -55,7 +75,38 @@ private:
 
 class Arrow : public Entity
 {
+	friend class World;
 	friend class GameView;
+public:
+	vec2 getPosition() const { return position; }
+	vec2 getVelocity() const { return velocity; }
+	std::string getName() const { return name; }
+	float getHp() const { return hp; }
+	float getMaxHp() const { return maxHp; }
+	Arrows getType() const { return type; }
+	uint8_t getLevel() const { return level; }
+	bool isDashing() const { return dashing; }
+	bool isShielding() const { return shielding; }
+	bool isAttackReady() const { return attackReady; }
+	bool isShieldReady() const { return shieldReady; }
+	bool isMain() const { return main; }
+private:
+	vec2 position;
+	vec2 velocity;
+	std::string name;
+	float cooldown;
+	float shieldCooldown;
+	float hp;
+	float maxHp;
+	uint32_t id;
+	Arrows type;
+	uint8_t level;
+	bool dashing;
+	bool shielding;
+	bool attackReady;
+	bool shieldReady;
+	bool main;
+
 	void virtual sync(const char** payload);
 };
 
@@ -74,11 +125,20 @@ public:
 		delete[] arrowAlloc.buffer;
 	}
 	const Goom* nearestGoom(vec2 position) const;
+	const Arrow* nearestArrow(vec2 position) const;
+	const Arrow* getMain() const { return main; }
+	vec2 getLeaderPos() const { return leaderPos; }
+	inline void destroyGoom(uint32_t id);
+	inline void destroyArrow(uint32_t id);
 private:
+	void sync(const char* payload);
+	void reset();
+	Arrow* main = nullptr;
 	PoolAllocator arrowAlloc;
 	PoolAllocator goomAlloc;
-	void sync(const char* payload);
 	std::unordered_map<uint32_t, Goom*> gooms;
 	std::unordered_map<uint32_t, Arrow*> arrows;
 	World& world;
+	vec2 leaderPos;
+	uint32_t id;
 };

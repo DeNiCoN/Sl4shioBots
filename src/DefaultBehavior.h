@@ -26,7 +26,16 @@ class DefaultBehavior : public VBehavior
 {
 	virtual void onPlayingStart() override;
 	virtual void update(std::chrono::duration<double> delta) override;
+	virtual void onUpgradeAvailable(uint8_t count) override 
+	{ 
+		for (int i = 0; i < count; i++)
+		{
+			Upgrades up = (Upgrades)(rand() % 6);
+			bot->upgrade(up); 
+			std::cout << "Upgrade: " << up << "\n";
+		}
+	}
 private:
 	std::chrono::duration<double> delay;
-	std::chrono::duration<double> updateDelay{ 1.0 };
+	std::chrono::duration<double> updateDelay{ 0.2 };
 };

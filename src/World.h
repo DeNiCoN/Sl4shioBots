@@ -125,7 +125,10 @@ private:
 	client endpoint;
 	std::string uri;
 	std::vector<Bot_ptr> activeBots;
-	std::list<client::message_ptr> messagesQueue;
+
+	websocketpp::lib::mutex messageQueueMutex;
+	std::list<std::pair<Bot_ptr, client::message_ptr>> messagesQueue;
+	void handleMessage(std::pair<Bot_ptr, client::message_ptr> entry);
 
 	void onSetup(Bot_ptr bot, const char* payload);
 	void onStartPlaying(Bot_ptr bot, const char* payload);

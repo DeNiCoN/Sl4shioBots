@@ -32,15 +32,7 @@ SOFTWARE.
 
 
 
-enum Arrows
-{
-	STANDART = 0
-};
 
-enum Upgrades
-{
-
-};
 
 class Bot;
 class World;
@@ -79,6 +71,7 @@ class VBehavior
 public:
 	virtual ~VBehavior() {}
 	void virtual onPlayingStart() = 0;
+	void virtual onUpgradeAvailable(uint8_t count) {}
 	void virtual update(std::chrono::duration<double> delta) = 0;
 protected:
 	Bot* bot;
@@ -98,6 +91,7 @@ public:
 
 	const GameView& getGameView() const { return view; }
 	const BotState& getBotState() const { return state; }
+	uint32_t getId() const { return id; }
 private:
 	BotStats stats;
 	BotState state;

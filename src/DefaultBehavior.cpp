@@ -21,6 +21,7 @@ SOFTWARE.
 */
 
 #include "DefaultBehavior.h"
+#include "Utils.h"
 
 void DefaultBehavior::onPlayingStart()
 {
@@ -32,10 +33,41 @@ void DefaultBehavior::update(std::chrono::duration<double> delta)
 	delay += delta;
 	if (delay > updateDelay)
 	{
-		std::cout << "update\n";
 		delay = std::chrono::duration<double>(0);
-		const Goom* goom = bot->getGameView().nearestGoom({ 0.f, 0.f });
-		if (goom)
-			bot->dash(atanf(goom->getPosition().y / goom->getPosition().x));
+		const Arrow* arrow = bot->getGameView().nearestArrow(bot->getGameView().getMain()->getPosition());
+		const Goom* goom = bot->getGameView().nearestGoom(bot->getGameView().getMain()->getPosition());
+		float angle;
+		vec2 arrowRelativePos;
+		vec2 goomRelativePos;
+		if (arrow && goom)
+		{
+			arrowRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), arrow->getPosition());
+			goomRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), goom->getPosition());
+			if (vec2LengthSquared(goomRelativePos) < vec2LengthSquared(arrowRelativePos))
+			{
+				angle = utils::clockwiseAngle(goomRelativePos);
+			}
+			else
+			{
+				angle = utils::clockwiseAngle(arrowRelativePos);
+			}
+		}
+		else if (goom)
+		{
+			goomRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), goom->getPosition());
+			angle = utils::clockwiseAngle(goomRelativePos);
+		}
+		else if (arrow)
+		{
+			arrowRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), arrow->getPosition());
+			angle = utils::clockwiseAngle(arrowRelativePos);
+		} 
+		else
+		{
+			vec2 leaderRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), bot->getGameView().getLeaderPos());
+			angle = utils::clockwiseAngle(leaderRelativePos);
+		}
+		bot->setAngle(angle);
+		bot->dash(angle);
 	}
 }

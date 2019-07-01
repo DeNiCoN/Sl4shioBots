@@ -15,6 +15,8 @@ add_executable(Sla4shioBot
 "src/DefaultBehavior.cpp"
 "src/GameView.h"
 "src/GameView.cpp"
+"src/Utils.cpp"
+"src/Utils.h"
 )
 
 if(WIN32)

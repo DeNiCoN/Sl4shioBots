@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 
-add_subdirectory(lib/websocketpp-master)
+project(Bots)
+
+## add_subdirectory(lib/websocketpp-master)
 
 add_executable(Sla4shioBot
 "src/Main.cpp"
@@ -19,9 +21,9 @@ add_executable(Sla4shioBot
 "src/Utils.h"
 )
 
-if(WIN32)
-  target_link_libraries(Sla4shioBot wsock32 ws2_32)
-endif()
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(Sla4shioBot Threads::Threads)
 
 include_directories("lib/websocketpp-master")
 include_directories("lib/asio-1.12.2/include")

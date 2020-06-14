@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #pragma once
+#include <string>
 #include <list>
 #include "linearmath.h"
 #include <vector>
@@ -128,8 +129,8 @@ public:
 	const Arrow* nearestArrow(vec2 position) const;
 	const Arrow* getMain() const { return main; }
 	vec2 getLeaderPos() const { return leaderPos; }
-	inline void destroyGoom(uint32_t id);
-	inline void destroyArrow(uint32_t id);
+	void destroyGoom(uint32_t id);
+	void destroyArrow(uint32_t id);
 private:
 	void sync(const char* payload);
 	void reset();

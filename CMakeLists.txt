@@ -4,6 +4,9 @@ project(Bots)
 
 ## add_subdirectory(lib/websocketpp-master)
 
+#add_subdirectory(src/base)
+
+
 add_executable(Sla4shioBot
 "src/Main.cpp"
 "src/Bot.h"
@@ -21,9 +24,8 @@ add_executable(Sla4shioBot
 "src/Utils.h"
 )
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-target_link_libraries(Sla4shioBot Threads::Threads)
+add_subdirectory(lib)
 
-include_directories("lib/websocketpp-master")
-include_directories("lib/asio-1.12.2/include")
+target_link_libraries(Sla4shioBot
+  lib
+  )

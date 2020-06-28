@@ -6,6 +6,8 @@ project(Bots)
 
 #add_subdirectory(src/base)
 
+set (CMAKE_CXX_STANDARD 20)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(Sla4shioBot
 "src/Main.cpp"
@@ -26,6 +28,9 @@ add_executable(Sla4shioBot
 
 add_subdirectory(lib)
 
+target_include_directories(Sla4shioBot
+  PUBLIC "src"
+  )
 target_link_libraries(Sla4shioBot
   lib
   )

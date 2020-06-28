@@ -20,9 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #pragma once
-#define _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
-#define _WEBSOCKETPP_CPP11_TYPE_TRAITS_
-#define ASIO_STANDALONE
 #include <memory>
 #include <string>
 #include <websocketpp/config/asio_no_tls_client.hpp>
@@ -30,12 +27,8 @@ SOFTWARE.
 #include <ctype.h>
 #include "GameView.h"
 
-
-
-
-
 class Bot;
-class World;
+class BotServer;
 class VBehavior;
 
 using Bot_ptr = std::shared_ptr<Bot>;
@@ -79,9 +72,9 @@ protected:
 
 class Bot
 {
-	friend class World;
+	friend class BotServer;
 public:
-	Bot(std::string name, VBehavior& behavior, World& world) : name(name), behavior(behavior), world(world), view(world) { behavior.bot = this; }
+	Bot(std::string name, VBehavior& behavior, BotServer& world) : name(name), behavior(behavior), world(world), view(world) { behavior.bot = this; }
 	std::string getName() const { return name; }
 	websocketpp::connection_hdl getConnectionHandle() const { return connection_hdl; }
 	void setAngle(float angle);
@@ -99,6 +92,6 @@ private:
 	std::string name;
 	uint32_t id;
 	VBehavior& behavior;
-	World& world;
+	BotServer& world;
 	GameView view;
 };

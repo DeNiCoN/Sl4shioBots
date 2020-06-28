@@ -12,11 +12,8 @@ target_compile_definitions(lib INTERFACE
   )
 
 find_package(websocketpp REQUIRED)
-
-target_link_libraries(lib
-  INTERFACE websocketpp::websocketpp
-  INTERFACE Threads::Threads
-  )
+find_package(CURL REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 FetchContent_Declare(asio
   GIT_REPOSITORY    https://github.com/chriskohlhoff/asio/
@@ -29,6 +26,14 @@ if(NOT asio_POPULATED)
   message("Populating asio")
   FetchContent_Populate(asio)
 endif()
+
+target_link_libraries(lib
+  INTERFACE websocketpp::websocketpp
+  INTERFACE Threads::Threads
+  INTERFACE CURL::libcurl
+  INTERFACE nlohmann_json::nlohmann_json
+  )
+
 target_include_directories(lib
   INTERFACE ${asio_SOURCE_DIR}/asio/include
   )

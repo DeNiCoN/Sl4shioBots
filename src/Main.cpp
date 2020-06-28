@@ -19,95 +19,61 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#define _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
-#define _WEBSOCKETPP_CPP11_TYPE_TRAITS_
-#define ASIO_STANDALONE
 
-#include <websocketpp/common/random.hpp>
-#include <websocketpp/config/asio_no_tls_client.hpp>
-#include <websocketpp/client.hpp>
-#include <websocketpp/common/thread.hpp>
-#include <websocketpp/common/memory.hpp>
-#include <websocketpp/common/thread.hpp>
-#include "World.h"
-#include <vector>
+#include <nlohmann/json.hpp>
+#include <curl/curl.h>
+#include <string>
 #include <sstream>
-#include <chrono>
-#include "DefaultBehavior.h"
+#include <iostream>
+#include "server/Server.hpp"
 
-using clk = std::chrono::high_resolution_clock;
+std::stringstream g_stream;
 
-World world("ws://45.32.233.97:9000");
-std::stringstream messages;
-websocketpp::lib::mutex messages_mutex;
-
-bool run = true;
-
-void consoleReader()
+size_t write(char* c, size_t size, size_t nmemb, void* userp)
 {
-	std::string message;
-	while (run)
-	{
-		std::getline(std::cin, message);
-		messages_mutex.lock();
-		messages << message;
-		messages_mutex.unlock();
-	}
+	g_stream.write(static_cast<char*>(c), size*nmemb);
+	return size*nmemb;
 }
 
-void handleMessage(std::string message)
+//sends http request through libcurl
+//and returns response through stream
+//very likely to be used only one time
+std::istream& get(const char* url)
 {
-	std::string mes;
-	std::stringstream stream(message);
-	stream >> mes;
-	if (mes == "quit")
-	{
-		run = false;
-	}
-	else if (mes == "connect")
-	{
-		int n;
-		stream >> n;
-		for (int i = 0; i < n; i++)
-		{
-			std::string name;
-			stream >> name;
-			Bot_ptr bot = Bot_ptr(new Bot(name , *(new DefaultBehavior()), world));
-			world.connect(bot);
-		}
-	}
-	else if (mes.substr(0, 5) == "leave")
-	{
+	g_stream.clear();
+	CURL *curl;
+	CURLcode res;
 
+	curl_global_init(CURL_GLOBAL_ALL);
+
+	curl = curl_easy_init();
+	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write);
+		res = curl_easy_perform(curl);
+		if(res != CURLE_OK)
+			fprintf(stderr, "curl_easy_perform() failed: %s\n",
+					curl_easy_strerror(res));
+		curl_easy_cleanup(curl);
 	}
+	curl_global_cleanup();
+	return g_stream;
 }
+
+//returns sl4sh io server ip and port
+//parses json using jsonpp
+std::string getServerIpPort(const char* url)
+{
+	nlohmann::json json;
+	get(url) >> json;
+	return json.front().front()["address"].get<std::string>();
+}
+
+using namespace Sl4shioBots;
 
 int main() 
 {
-	world.init();
-	std::cout << "Enter connect [count] [names] to connect bots" << '\n';
-	auto console_thread = websocketpp::lib::thread(consoleReader);
-	std::string message;
-
-	clk::time_point current = clk::now();
-	clk::time_point last = clk::now();
-	auto delta = std::chrono::duration_cast<std::chrono::duration<double>>(current - last);
-	while (run)
-	{
-		current = clk::now();
-		delta = current - last;
-		if (messages.rdbuf()->in_avail() != 0 && messages_mutex.try_lock())
-		{
-			std::getline(messages, message);
-			messages_mutex.unlock();
-			handleMessage(message);
-		}
-		
-		world.update(delta);
-
-		last = current;
-	}
-
-	console_thread.join();
-	return 0;
+	Server server;
+	server.run(getServerIpPort("http://sl4sh.io/servers.json"));
 }

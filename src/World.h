@@ -20,9 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#define _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
-#define _WEBSOCKETPP_CPP11_TYPE_TRAITS_
-#define ASIO_STANDALONE
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -108,15 +105,17 @@ namespace Messages
 class Goom;
 class Arrow;
 
-class World
+class BotServer
 {
 	friend class Bot;
 public:
-	World(std::string uri);
-	~World();
+	BotServer(std::string uri);
+	~BotServer();
+	bool run();
 	void init();
 	void update(std::chrono::duration<double> delta);
 	bool connect(Bot_ptr bot);
+private:
 
 
 private:

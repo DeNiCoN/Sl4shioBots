@@ -31,7 +31,7 @@ SOFTWARE.
 #define ALLOCATOR_MAX_GOOM_OBJECTS 64
 #define ALLOCATOR_MAX_ARROW_OBJECTS 128
 
-class World;
+class BotServer;
 class GameView;
 
 enum Arrows
@@ -76,7 +76,7 @@ private:
 
 class Arrow : public Entity
 {
-	friend class World;
+	friend class BotServer;
 	friend class GameView;
 public:
 	vec2 getPosition() const { return position; }
@@ -113,9 +113,9 @@ private:
 
 class GameView
 {
-	friend class World;
+	friend class BotServer;
 public:
-	GameView(World& world) : world(world) 
+	GameView(BotServer& world) : world(world) 
 	{
 		poolInit(&goomAlloc, new char[ALLOCATOR_MAX_GOOM_OBJECTS * sizeof(Goom)], sizeof(Goom), ALLOCATOR_MAX_GOOM_OBJECTS);
 		poolInit(&arrowAlloc, new char[ALLOCATOR_MAX_ARROW_OBJECTS * sizeof(Arrow)], sizeof(Arrow), ALLOCATOR_MAX_ARROW_OBJECTS);
@@ -139,7 +139,7 @@ private:
 	PoolAllocator goomAlloc;
 	std::unordered_map<uint32_t, Goom*> gooms;
 	std::unordered_map<uint32_t, Arrow*> arrows;
-	World& world;
+	BotServer& world;
 	vec2 leaderPos;
 	uint32_t id;
 };

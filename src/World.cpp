@@ -24,12 +24,12 @@ SOFTWARE.
 #include "World.h"
 
 
-World::World(std::string uri) : uri(uri)
+BotServer::BotServer(std::string uri) : uri(uri)
 {
 
 }
 
-World::~World()
+BotServer::~BotServer()
 {
 	if (initialized)
 	{
@@ -39,7 +39,7 @@ World::~World()
 	}
 }
 
-void World::init()
+void BotServer::init()
 {
 	initialized = true;
 
@@ -58,10 +58,11 @@ void World::init()
 
 	endpoint.init_asio();
 	endpoint.start_perpetual();
-	endpoint_thread = websocketpp::lib::make_shared<websocketpp::lib::thread>(&client::run, &endpoint);
+	endpoint_thread = websocketpp::lib::make_shared<websocketpp::lib::thread>
+		(&client::run, &endpoint);
 }
 
-void World::update(std::chrono::duration<double> delta)
+void BotServer::update(std::chrono::duration<double> delta)
 {
 	while (!messagesQueue.empty())
 	{
@@ -90,7 +91,7 @@ void World::update(std::chrono::duration<double> delta)
 	}
 }
 
-bool World::connect(Bot_ptr bot)
+bool BotServer::connect(Bot_ptr bot)
 {
 	websocketpp::lib::error_code ec;
 	client::connection_ptr connection = endpoint.get_connection(uri, ec);
@@ -158,7 +159,7 @@ std::string Messages::upgrade(Upgrades upgrade)
 	return payload;
 }
 
-void World::handleMessage(std::pair<Bot_ptr, client::message_ptr> entry)
+void BotServer::handleMessage(std::pair<Bot_ptr, client::message_ptr> entry)
 {
 	Bot_ptr bot = entry.first;
 	const char* payload = entry.second->get_payload().c_str();
@@ -191,7 +192,7 @@ void World::handleMessage(std::pair<Bot_ptr, client::message_ptr> entry)
 	}
 }
 
-void World::onSetup(Bot_ptr bot, const char* payload)
+void BotServer::onSetup(Bot_ptr bot, const char* payload)
 {
 	std::cout << "setup";
 	bot->id = Messages::read<uint32_t>(&payload);
@@ -199,7 +200,7 @@ void World::onSetup(Bot_ptr bot, const char* payload)
 	endpoint.send(bot->getConnectionHandle(), Messages::setObsPos(Messages::read<vec2>(&payload)), websocketpp::frame::opcode::BINARY);
 	endpoint.send(bot->getConnectionHandle(), Messages::start((Arrows)(rand() % 6), bot->getName()), websocketpp::frame::opcode::BINARY);
 }
-void World::onStartPlaying(Bot_ptr bot, const char* payload)
+void BotServer::onStartPlaying(Bot_ptr bot, const char* payload)
 {
 	std::cout << "start playing";
 	bot->state.upgradesAvailable = Messages::read<uint8_t>(&payload);
@@ -208,7 +209,7 @@ void World::onStartPlaying(Bot_ptr bot, const char* payload)
 	bot->behavior.onPlayingStart();
 }
 
-void World::onGameOver(Bot_ptr bot, const char* payload)
+void BotServer::onGameOver(Bot_ptr bot, const char* payload)
 {
 	std::cout << "game over";
 
@@ -218,12 +219,12 @@ void World::onGameOver(Bot_ptr bot, const char* payload)
 	endpoint.send(bot->getConnectionHandle(), Messages::start((Arrows)(rand() % 6), bot->getName()), websocketpp::frame::opcode::BINARY);
 }
 
-void World::onSpecArrow(Bot_ptr bot, const char* payload)
+void BotServer::onSpecArrow(Bot_ptr bot, const char* payload)
 {
 	std::cout << "spec arrow";
 }
 
-void World::onSync(Bot_ptr bot, const char* payload)
+void BotServer::onSync(Bot_ptr bot, const char* payload)
 {
 	float levelRatio = Messages::read<float>(&payload);
 	uint32_t leaderId = Messages::read<uint32_t>(&payload);
@@ -232,64 +233,64 @@ void World::onSync(Bot_ptr bot, const char* payload)
 	bot->view.sync(payload);
 }
 
-void World::onDamage(Bot_ptr bot, const char* payload)
+void BotServer::onDamage(Bot_ptr bot, const char* payload)
 {
 	std::cout << "damage";
 }
 
-void World::onDestroyArrow(Bot_ptr bot, const char* payload)
+void BotServer::onDestroyArrow(Bot_ptr bot, const char* payload)
 {
 	std::cout << "destroy arrow";
 	uint32_t id = Messages::read<uint32_t>(&payload);
 	bot->view.destroyArrow(id);
 }
 
-void World::onDashArrow(Bot_ptr bot, const char* payload)
+void BotServer::onDashArrow(Bot_ptr bot, const char* payload)
 {
 	std::cout << "dash arrow";
 }
 
-void World::onDestroyGoom(Bot_ptr bot, const char* payload)
+void BotServer::onDestroyGoom(Bot_ptr bot, const char* payload)
 {
 	std::cout << "destroy goom";
 	uint32_t id = Messages::read<uint32_t>(&payload);
 	bot->view.destroyGoom(id);
 }
 
-void World::onHitGoom(Bot_ptr bot, const char* payload)
+void BotServer::onHitGoom(Bot_ptr bot, const char* payload)
 {
 	std::cout << "hit goom";
 }
 
-void World::onHitArrow(Bot_ptr bot, const char* payload)
+void BotServer::onHitArrow(Bot_ptr bot, const char* payload)
 {
 	std::cout << "hit arrow";
 }
 
-void World::onRecoilArrow(Bot_ptr bot, const char* payload)
+void BotServer::onRecoilArrow(Bot_ptr bot, const char* payload)
 {
 	std::cout << "recoil arrow";
 }
 
-void World::onEatGoo(Bot_ptr bot, const char* payload)
+void BotServer::onEatGoo(Bot_ptr bot, const char* payload)
 {
 	std::cout << "eat goo";
 	
 }
 
-void World::onUpgradesAvailable(Bot_ptr bot, const char* payload)
+void BotServer::onUpgradesAvailable(Bot_ptr bot, const char* payload)
 {
 	std::cout << "upgrades available";
 	bot->behavior.onUpgradeAvailable(Messages::read<uint8_t>(&payload));
 }
 
-void World::onSetVision(Bot_ptr bot, const char* payload)
+void BotServer::onSetVision(Bot_ptr bot, const char* payload)
 {
 	std::cout << "set vision";
 	bot->state.vision = Messages::read<float>(&payload);
 }
 
-void World::onDash(Bot_ptr bot, const char* payload)
+void BotServer::onDash(Bot_ptr bot, const char* payload)
 {
 	std::cout << "dash";
 	//bot->view.main->cooldown = Messages::read<uint32_t>(&payload);
@@ -297,7 +298,7 @@ void World::onDash(Bot_ptr bot, const char* payload)
 	bot->stats.dashes++;
 }
 
-void World::onDashCombo(Bot_ptr bot, const char* payload)
+void BotServer::onDashCombo(Bot_ptr bot, const char* payload)
 {
 	std::cout << "dash combo";
 	//bot->view.main->cooldown = 0;
@@ -309,24 +310,24 @@ void World::onDashCombo(Bot_ptr bot, const char* payload)
 
 }
 
-void World::onShield(Bot_ptr bot, const char* payload)
+void BotServer::onShield(Bot_ptr bot, const char* payload)
 {
 	std::cout << "shield";
 }
 
-void World::onShieldUsed(Bot_ptr bot, const char* payload)
+void BotServer::onShieldUsed(Bot_ptr bot, const char* payload)
 {
 	bot->stats.shieldUsed++;
 	std::cout << "shield used";
 }
 
-void World::onKill(Bot_ptr bot, const char* payload)
+void BotServer::onKill(Bot_ptr bot, const char* payload)
 {
 	std::cout << "kill";
 	bot->stats.kills++;
 }
 
-void World::onSetLeaderboard(Bot_ptr bot, const char* payload)
+void BotServer::onSetLeaderboard(Bot_ptr bot, const char* payload)
 {
 	std::cout << "set leaderboard";
 }

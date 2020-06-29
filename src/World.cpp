@@ -87,7 +87,7 @@ void BotServer::update(std::chrono::duration<double> delta)
 			}
 		*/
 		if (bot->view.main)
-		bot->behavior.update(delta);
+			bot->behavior.update(delta);
 	}
 }
 

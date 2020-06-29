@@ -20,16 +20,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <thread>
 #include <nlohmann/json.hpp>
 #include <curl/curl.h>
 #include <string>
 #include <sstream>
 #include <iostream>
-#include "server/Server.hpp"
+#include <chrono>
+#include "World.h"
+#include "DefaultBehavior.h"
 
 std::stringstream g_stream;
 
-size_t write(char* c, size_t size, size_t nmemb, void* userp)
+size_t mywrite(char* c, size_t size, size_t nmemb, void* userp)
 {
 	g_stream.write(static_cast<char*>(c), size*nmemb);
 	return size*nmemb;
@@ -50,7 +53,7 @@ std::istream& get(const char* url)
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mywrite);
 		res = curl_easy_perform(curl);
 		if(res != CURLE_OK)
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
@@ -70,10 +73,35 @@ std::string getServerIpPort(const char* url)
 	return json.front().front()["address"].get<std::string>();
 }
 
-using namespace Sl4shioBots;
 
 int main() 
 {
-	Server server;
-	server.run(getServerIpPort("http://sl4sh.io/servers.json"));
+	std::string uri = getServerIpPort("http://sl4sh.io/servers.json");
+	BotServer server {"ws://" + uri};
+	server.init();
+
+	Bot_ptr bot = Bot_ptr(new Bot("DeNiCoN" , *(new DefaultBehavior()), server));
+	Bot_ptr bot2 = Bot_ptr(new Bot("Arbyz" , *(new DefaultBehavior()), server));
+	Bot_ptr bot1 = Bot_ptr(new Bot("Flopi" , *(new DefaultBehavior()), server));
+	Bot_ptr bot3 = Bot_ptr(new Bot("CyXaRuK" , *(new DefaultBehavior()), server));
+	Bot_ptr bot4 = Bot_ptr(new Bot("Alvanes" , *(new DefaultBehavior()), server));
+
+	server.connect(bot);
+	server.connect(bot2);
+	server.connect(bot1);
+	server.connect(bot3);
+	server.connect(bot4);
+	using clk = std::chrono::high_resolution_clock;
+	clk::time_point current = clk::now();
+	clk::time_point last = clk::now();
+	auto delta = std::chrono::duration_cast<std::chrono::duration<double>>(current - last);
+	while (true)
+	{
+		delta = current - last;
+		std::this_thread::sleep_for(std::chrono::milliseconds(17) - delta);
+		current = clk::now();
+		server.update(std::chrono::milliseconds(17));
+
+		last = current;
+	}
 }

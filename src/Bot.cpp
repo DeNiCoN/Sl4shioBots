@@ -22,6 +22,7 @@ SOFTWARE.
 
 #include "World.h"
 #include "Bot.h"
+#include "Messages.hpp"
 
 
 void Bot::setAngle(float angle)

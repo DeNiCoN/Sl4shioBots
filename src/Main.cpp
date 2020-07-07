@@ -74,23 +74,17 @@ std::string getServerIpPort(const char* url)
 }
 
 
-int main() 
+int main()
 {
 	std::string uri = getServerIpPort("http://sl4sh.io/servers.json");
 	BotServer server {"ws://" + uri};
 	server.init();
 
-	Bot_ptr bot = Bot_ptr(new Bot("DeNiCoN" , *(new DefaultBehavior()), server));
-	Bot_ptr bot2 = Bot_ptr(new Bot("Arbyz" , *(new DefaultBehavior()), server));
-	Bot_ptr bot1 = Bot_ptr(new Bot("Flopi" , *(new DefaultBehavior()), server));
-	Bot_ptr bot3 = Bot_ptr(new Bot("CyXaRuK" , *(new DefaultBehavior()), server));
-	Bot_ptr bot4 = Bot_ptr(new Bot("Alvanes" , *(new DefaultBehavior()), server));
-
+	for(int i = 0; i < 50; i++) {
+	Bot_ptr bot = Bot_ptr(new Bot("" , *(new DefaultBehavior()), server));
 	server.connect(bot);
-	server.connect(bot2);
-	server.connect(bot1);
-	server.connect(bot3);
-	server.connect(bot4);
+	}
+
 	using clk = std::chrono::high_resolution_clock;
 	clk::time_point current = clk::now();
 	clk::time_point last = clk::now();

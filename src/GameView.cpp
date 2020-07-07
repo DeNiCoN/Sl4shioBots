@@ -22,6 +22,7 @@ SOFTWARE.
 #include "GameView.h"
 #include "World.h"
 #include <algorithm>
+#include "Messages.hpp"
 
 const Goom* GameView::nearestGoom(vec2 position) const
 {

@@ -39,69 +39,6 @@ typedef websocketpp::client<websocketpp::config::asio_client> client;
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 
-
-namespace Messages
-{
-	template<typename T>
-	inline T read(const char** payload)
-	{
-		T data = *reinterpret_cast<const T*>(*payload);
-		*payload += sizeof(T);
-		return data;
-	}
-
-	namespace Input
-	{
-		enum ICodes
-		{
-			SETUP = 0, //0
-			START_PLAYING = 1, //1
-			GAME_OVER = 2, //2
-			SPEC_ARROW = 3,//3
-			SYNC = 4,//4
-			DAMAGE = 5,//5
-			DESTROY_ARROW = 6, //6
-			DASH_ARROW = 7,//7
-			DESTROY_GOOM = 8,//8
-			HIT_GOOM = 9,//9
-			HIT_ARROW = 10,//10
-			RECOIL_ARROW = 11,//11
-			EAT_GOO = 12,//12
-			UPGRADES_AVAILABLE = 13,//13
-			SET_VISION = 14,//14
-			DASH = 15,//15
-			DASH_COMBO = 16,//16
-			SHIELD = 17,//17
-			SHIELD_USED = 18,//18
-			KILL = 19,//19
-			SET_LEADERBOARD = 20//20
-		};
-	}
-	namespace Output
-	{
-		enum OCodes
-		{
-			SET_OBS_POS = 0,
-			START = 1,
-			SPECTATE = 2,
-			LEAVE = 3,
-			SET_MOVEMENT = 4,
-			DASH = 5,
-			SHIELD = 6,
-			UPGRADE = 7
-		};
-	}
-
-	std::string setObsPos(vec2 coords);
-	std::string start(Arrows arrow, std::string name);
-	std::string leave();
-	std::string setAngle(float angle);
-	std::string dash(float angle);
-	std::string shield();
-	std::string upgrade(Upgrades upgrade);
-
-}
-
 class Goom;
 class Arrow;
 
@@ -115,8 +52,6 @@ public:
 	void init();
 	void update(std::chrono::duration<double> delta);
 	bool connect(Bot_ptr bot);
-private:
-
 
 private:
 	bool initialized = false;

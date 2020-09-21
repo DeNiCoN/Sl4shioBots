@@ -24,15 +24,10 @@ SOFTWARE.
 #include <memory>
 #include <unordered_map>
 #include <string>
-#include <websocketpp/config/asio_no_tls_client.hpp>
-#include <websocketpp/client.hpp>
-#include <websocketpp/common/thread.hpp>
-#include <websocketpp/common/memory.hpp>
 #include <chrono>
 #include "linearmath.h"
 #include "Bot.h"
 #include <list>
-
 
 typedef websocketpp::client<websocketpp::config::asio_client> client;
 
@@ -48,20 +43,23 @@ class BotServer
 public:
 	BotServer(std::string uri);
 	~BotServer();
-	bool run();
-	void init();
-	void update(std::chrono::duration<double> delta);
+	bool run(std::chrono::duration<double>);
 	bool connect(Bot_ptr bot);
+	void close() { m_shouldClose = true; }
 
 private:
-	bool initialized = false;
-	websocketpp::lib::shared_ptr<websocketpp::lib::thread> endpoint_thread;
-	client endpoint;
+	void init();
+	void update(std::chrono::duration<double> delta);
+
 	std::string uri;
 	std::vector<Bot_ptr> activeBots;
+	bool m_shouldClose = false;
 
 	websocketpp::lib::mutex messageQueueMutex;
-	std::list<std::pair<Bot_ptr, client::message_ptr>> messagesQueue;
+	std::queue<std::pair<Bot_ptr, client::message_ptr>> messagesQueue;
+	websocketpp::lib::shared_ptr<websocketpp::lib::thread> endpoint_thread;
+	client endpoint;
+
 	void handleMessage(std::pair<Bot_ptr, client::message_ptr> entry);
 
 	void onSetup(Bot_ptr bot, const char* payload);

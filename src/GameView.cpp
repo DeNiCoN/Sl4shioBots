@@ -90,6 +90,7 @@ void GameView::sync(const char* payload)
 		}
 
 	}
+
 	n = Messages::read<uint32_t>(&payload);
 	for (unsigned int i = 0; i < n; i++)
 	{	//arrow went out of screen

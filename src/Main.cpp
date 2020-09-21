@@ -78,24 +78,11 @@ int main()
 {
 	std::string uri = getServerIpPort("http://sl4sh.io/servers.json");
 	BotServer server {"ws://" + uri};
-	server.init();
 
-	for(int i = 0; i < 50; i++) {
+	for(int i = 0; i < 1; i++) {
 	Bot_ptr bot = Bot_ptr(new Bot("" , *(new DefaultBehavior()), server));
 	server.connect(bot);
 	}
-
-	using clk = std::chrono::high_resolution_clock;
-	clk::time_point current = clk::now();
-	clk::time_point last = clk::now();
-	auto delta = std::chrono::duration_cast<std::chrono::duration<double>>(current - last);
-	while (true)
-	{
-		delta = current - last;
-		std::this_thread::sleep_for(std::chrono::milliseconds(17) - delta);
-		current = clk::now();
-		server.update(std::chrono::milliseconds(17));
-
-		last = current;
-	}
+	server.run(std::chrono::duration<double>(1.0/60.0));
+	return 0;
 }

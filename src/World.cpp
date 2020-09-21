@@ -27,23 +27,6 @@ SOFTWARE.
 
 BotServer::BotServer(std::string uri) : uri(uri)
 {
-
-}
-
-BotServer::~BotServer()
-{
-	if (initialized)
-	{
-		endpoint.stop_perpetual();
-		endpoint_thread->join();
-		activeBots.clear();
-	}
-}
-
-void BotServer::init()
-{
-	initialized = true;
-
 	endpoint.clear_access_channels(websocketpp::log::alevel::all);
 	endpoint.clear_error_channels(websocketpp::log::elevel::all);
 
@@ -63,16 +46,41 @@ void BotServer::init()
 		(&client::run, &endpoint);
 }
 
+BotServer::~BotServer()
+{
+	endpoint.stop_perpetual();
+	endpoint_thread->join();
+	activeBots.clear();
+}
+
+bool BotServer::run(std::chrono::duration<double> secondsPerUpdate)
+{
+	using clk = std::chrono::high_resolution_clock;
+	clk::time_point current = clk::now();
+	clk::time_point last = clk::now();
+	auto delta = std::chrono::duration_cast<std::chrono::duration<double>>(current - last);
+	while (!m_shouldClose)
+	{
+		delta = current - last;
+		std::this_thread::sleep_for(secondsPerUpdate - delta);
+		current = clk::now();
+		update(secondsPerUpdate);
+
+		last = current;
+	}
+	return 0;
+}
+
 void BotServer::update(std::chrono::duration<double> delta)
 {
+	messageQueueMutex.lock();
 	while (!messagesQueue.empty())
 	{
-		messageQueueMutex.lock();
 		auto m = messagesQueue.front();
-		messagesQueue.pop_front();
-		messageQueueMutex.unlock();
 		handleMessage(m);
+		messagesQueue.pop();
 	}
+	messageQueueMutex.unlock();
 
 	for (auto bot : activeBots)
 	{
@@ -102,10 +110,10 @@ bool BotServer::connect(Bot_ptr bot)
 		return false;
 	}
 	bot->connection_hdl = connection->get_handle();
-	connection->set_message_handler([&, bot](websocketpp::connection_hdl hdl, client::message_ptr m)
+	connection->set_message_handler([&](websocketpp::connection_hdl hdl, client::message_ptr m)
 	{
 		messageQueueMutex.lock();
-		messagesQueue.push_back(std::make_pair(bot, m));
+		messagesQueue.push(std::make_pair(bot, m));
 		messageQueueMutex.unlock();
 	});
 

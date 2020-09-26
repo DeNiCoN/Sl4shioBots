@@ -36,6 +36,7 @@ using websocketpp::lib::placeholders::_2;
 
 class Goom;
 class Arrow;
+class ClientRequest;
 
 class BotServer
 {
@@ -52,11 +53,17 @@ private:
 	void update(std::chrono::duration<double> delta);
 
 	std::string uri;
+
+	asio::io_context io_context;
+	asio::ip::tcp::socket current_socket {io_context};
+	uint16_t server_port;
 	std::vector<Bot_ptr> activeBots;
 	bool m_shouldClose = false;
 
+
 	websocketpp::lib::mutex messageQueueMutex;
 	std::queue<std::pair<Bot_ptr, client::message_ptr>> messagesQueue;
+	std::queue<std::unique_ptr<ClientRequest>> requestsQueue;
 	websocketpp::lib::shared_ptr<websocketpp::lib::thread> endpoint_thread;
 	client endpoint;
 

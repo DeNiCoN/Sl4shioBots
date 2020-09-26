@@ -1,31 +1,35 @@
 /*
-Copyright(c) 2019 DeNiCoN
+  Copyright(c) 2019 DeNiCoN
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this softwareand associated documentation files(the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions :
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this softwareand associated documentation files(the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions :
 
-The above copyright noticeand this permission notice shall be included in all
-copies or substantial portions of the Software.
+  The above copyright noticeand this permission notice shall be included in all
+  copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 */
 
 #include "GameView.h"
 #include "World.h"
 #include "Messages.hpp"
+#include <nlohmann/json.hpp>
+#include <curl/curl.h>
+#include "ClientRequest.hpp"
+#include <thread>
 
-
-BotServer::BotServer(std::string uri) : uri(uri)
+BotServer::BotServer(std::string uri, uint16_t server_port)
+	: uri(uri), server_port(server_port)
 {
 	endpoint.clear_access_channels(websocketpp::log::alevel::all);
 	endpoint.clear_error_channels(websocketpp::log::elevel::all);
@@ -55,6 +59,35 @@ BotServer::~BotServer()
 
 bool BotServer::run(std::chrono::duration<double> secondsPerUpdate)
 {
+	std::thread listen_thread([&]()
+	{
+		using namespace asio::ip;
+		while (!m_shouldClose)
+		{
+			try
+			{
+				tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), server_port));
+				acceptor.accept(current_socket);
+				while(true)
+				{
+					std::string message;
+					asio::error_code error;
+					current_socket.read_some(message, error);
+					if (error == asio::error::eof)
+						break; // Connection closed cleanly by peer.
+					else if (error)
+						throw asio::system_error(error);
+
+
+				}
+			}
+			catch (std::exception& e)
+			{
+				std::cerr << e.what() << std::endl;
+			}
+		}
+	});
+
 	using clk = std::chrono::high_resolution_clock;
 	clk::time_point current = clk::now();
 	clk::time_point last = clk::now();
@@ -68,33 +101,30 @@ bool BotServer::run(std::chrono::duration<double> secondsPerUpdate)
 
 		last = current;
 	}
+	listen_thread.join();
 	return 0;
 }
 
 void BotServer::update(std::chrono::duration<double> delta)
 {
-	messageQueueMutex.lock();
-	while (!messagesQueue.empty())
 	{
-		auto m = messagesQueue.front();
-		handleMessage(m);
-		messagesQueue.pop();
+		std::lock_guard lock(messageQueueMutex);
+		while (!messagesQueue.empty())
+		{
+			auto& m = messagesQueue.front();
+			handleMessage(m);
+			messagesQueue.pop();
+		}
+		while(!requestsQueue.empty())
+		{
+			auto& request = requestsQueue.front();
+			request->handle(*this);
+			requestsQueue.pop();
+		}
 	}
-	messageQueueMutex.unlock();
 
 	for (auto bot : activeBots)
 	{
-		/*
-		if(bot->view.main)
-			if (bot->view.main->cooldown > 0)
-			{
-				bot->view.main->cooldown -= delta.count();
-			}
-			else
-			{
-				bot->view.main->attackReady = true;
-			}
-		*/
 		if (bot->view.main)
 			bot->behavior.update(delta);
 	}
@@ -112,9 +142,8 @@ bool BotServer::connect(Bot_ptr bot)
 	bot->connection_hdl = connection->get_handle();
 	connection->set_message_handler([&](websocketpp::connection_hdl hdl, client::message_ptr m)
 	{
-		messageQueueMutex.lock();
+		std::lock_guard lock(messageQueueMutex);
 		messagesQueue.push(std::make_pair(bot, m));
-		messageQueueMutex.unlock();
 	});
 
 	endpoint.connect(connection);
@@ -294,4 +323,60 @@ void BotServer::onKill(Bot_ptr bot, const char* payload)
 void BotServer::onSetLeaderboard(Bot_ptr bot, const char* payload)
 {
 	std::cout << "set leaderboard\n";
+}
+
+std::stringstream g_stream;
+
+size_t mywrite(char* c, size_t size, size_t nmemb, void* userp)
+{
+	g_stream.write(static_cast<char*>(c), size*nmemb);
+	return size*nmemb;
+}
+
+//sends http request through libcurl
+//and returns response through stream
+//very likely to be used only one time
+std::istream& get(const char* url)
+{
+	g_stream.clear();
+	CURL *curl;
+	CURLcode res;
+
+	curl_global_init(CURL_GLOBAL_ALL);
+
+	curl = curl_easy_init();
+	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mywrite);
+		res = curl_easy_perform(curl);
+		if(res != CURLE_OK)
+			fprintf(stderr, "curl_easy_perform() failed: %s\n",
+					curl_easy_strerror(res));
+		curl_easy_cleanup(curl);
+	}
+	curl_global_cleanup();
+	return g_stream;
+}
+
+//returns sl4sh io server ip and port
+//parses json
+std::string getServerIpPort(const char* url)
+{
+	nlohmann::json json;
+	get(url) >> json;
+	return json.front().front()["address"].get<std::string>();
+}
+
+int main(int argc, char** argv)
+{
+	uint16_t port = 34534;
+
+	std::string uri = getServerIpPort("http://sl4sh.io/servers.json");
+
+	BotServer server(uri, port);
+
+	server.run(std::chrono::duration<double>(1.0/60.0));
+
+    return 0;
 }

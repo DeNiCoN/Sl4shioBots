@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(Bots)
+project(Sl4shioBots)
 
 ## add_subdirectory(lib/websocketpp-master)
 
@@ -9,7 +9,7 @@ project(Bots)
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(Sla4shioBot
+add_executable(server
 "src/Main.cpp"
 "src/Bot.h"
 "src/Bot.cpp"
@@ -28,9 +28,9 @@ add_executable(Sla4shioBot
 
 add_subdirectory(lib)
 
-target_include_directories(Sla4shioBot
+target_include_directories(server
   PUBLIC "src"
   )
-target_link_libraries(Sla4shioBot
+target_link_libraries(server
   lib
   )

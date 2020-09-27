@@ -20,6 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#pragma once
+
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -42,12 +44,12 @@ class BotServer
 {
 	friend class Bot;
 public:
-	BotServer(std::string uri);
+	BotServer(std::string uri, uint16_t port);
 	~BotServer();
 	bool run(std::chrono::duration<double>);
 	bool connect(Bot_ptr bot);
 	void close() { m_shouldClose = true; }
-
+	void sendMessageToClient(std::string_view);
 private:
 	void init();
 	void update(std::chrono::duration<double> delta);

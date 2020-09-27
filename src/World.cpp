@@ -21,6 +21,7 @@
 */
 
 #include "GameView.h"
+#include <array>
 #include "World.h"
 #include "Messages.hpp"
 #include <nlohmann/json.hpp>
@@ -57,6 +58,11 @@ BotServer::~BotServer()
 	activeBots.clear();
 }
 
+void BotServer::sendMessageToClient(std::string_view str)
+{
+	current_socket.send(asio::buffer(str.data(), str.length()));
+}
+
 bool BotServer::run(std::chrono::duration<double> secondsPerUpdate)
 {
 	std::thread listen_thread([&]()
@@ -70,19 +76,30 @@ bool BotServer::run(std::chrono::duration<double> secondsPerUpdate)
 				acceptor.accept(current_socket);
 				while(true)
 				{
-					std::string message;
+					std::array<char, 256> message;
 					asio::error_code error;
-					current_socket.read_some(message, error);
+					auto length = current_socket.read_some(asio::buffer(message), error);
 					if (error == asio::error::eof)
 						break; // Connection closed cleanly by peer.
 					else if (error)
 						throw asio::system_error(error);
 
+					auto request = ClientRequest::ParseRequest(
+						std::string_view(message.data(), length));
 
+					if (request)
+					{
+						requestsQueue.push(move(request));
+					}
+					else
+					{
+						sendMessageToClient("Error");
+					}
 				}
 			}
 			catch (std::exception& e)
 			{
+				current_socket.close();
 				std::cerr << e.what() << std::endl;
 			}
 		}

@@ -37,12 +37,12 @@ BotServer::BotServer(std::string uri, uint16_t server_port)
 
 	endpoint.set_open_handler(bind([&](client* c, websocketpp::connection_hdl hdl)
 	{
-		std::cout << "Successfully connected";
+		std::cout << "Successfully connected\n";
 		endpoint.send(hdl, " ", websocketpp::frame::opcode::TEXT);
 	}, &endpoint, ::_1));
 	endpoint.set_fail_handler(bind([&](client* c, websocketpp::connection_hdl hdl)
 	{
-		std::cout << "Failed to connect";
+		std::cout << "Failed to connect\n";
 	}, &endpoint, ::_1));
 
 	endpoint.init_asio();
@@ -74,13 +74,17 @@ bool BotServer::run(std::chrono::duration<double> secondsPerUpdate)
 			{
 				tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), server_port));
 				acceptor.accept(current_socket);
+				std::cout << "Client connected" << std::endl;
 				while(true)
 				{
 					std::array<char, 256> message;
 					asio::error_code error;
 					auto length = current_socket.read_some(asio::buffer(message), error);
 					if (error == asio::error::eof)
+					{
+						std::cout << "Client disconnected" << std::endl;
 						break; // Connection closed cleanly by peer.
+					}
 					else if (error)
 						throw asio::system_error(error);
 
@@ -143,27 +147,28 @@ void BotServer::update(std::chrono::duration<double> delta)
 	for (auto bot : activeBots)
 	{
 		if (bot->view.main)
-			bot->behavior.update(delta);
+			bot->behavior->update(delta);
 	}
 }
 
 bool BotServer::connect(Bot_ptr bot)
 {
 	websocketpp::lib::error_code ec;
-	client::connection_ptr connection = endpoint.get_connection(uri, ec);
+	client::connection_ptr connection = endpoint.get_connection("ws://" + uri, ec);
 	if (ec)
 	{
-		std::cout << ec.message();
+		std::cerr << ec.message() << std::endl;
 		return false;
 	}
 	bot->connection_hdl = connection->get_handle();
-	connection->set_message_handler([&](websocketpp::connection_hdl hdl, client::message_ptr m)
+	connection->set_message_handler([&, botptr = bot](websocketpp::connection_hdl hdl, client::message_ptr m)
 	{
 		std::lock_guard lock(messageQueueMutex);
-		messagesQueue.push(std::make_pair(bot, m));
+		messagesQueue.push(std::make_pair(botptr, m));
 	});
 
 	endpoint.connect(connection);
+	connectedBots.push_back(bot);
 	return true;
 }
 
@@ -214,7 +219,7 @@ void BotServer::onStartPlaying(Bot_ptr bot, const char* payload)
 	bot->state.upgradesAvailable = Messages::read<uint8_t>(&payload);
 	bot->state.vision = Messages::read<float>(&payload);
 	activeBots.push_back(bot);
-	bot->behavior.onPlayingStart();
+	bot->behavior->onPlayingStart();
 }
 
 void BotServer::onGameOver(Bot_ptr bot, const char* payload)
@@ -291,7 +296,7 @@ void BotServer::onEatGoo(Bot_ptr bot, const char* payload)
 void BotServer::onUpgradesAvailable(Bot_ptr bot, const char* payload)
 {
 	std::cout << "upgrades available\n";
-	bot->behavior.onUpgradeAvailable(Messages::read<uint8_t>(&payload));
+	bot->behavior->onUpgradeAvailable(Messages::read<uint8_t>(&payload));
 }
 
 void BotServer::onSetVision(Bot_ptr bot, const char* payload)
@@ -390,6 +395,7 @@ int main(int argc, char** argv)
 	uint16_t port = 34534;
 
 	std::string uri = getServerIpPort("http://sl4sh.io/servers.json");
+	std::cout << uri << std::endl;
 
 	BotServer server(uri, port);
 

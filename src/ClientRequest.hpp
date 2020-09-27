@@ -3,6 +3,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <memory>
+#include "DefaultBehavior.h"
 
 class ClientRequest;
 using ClientRequestPtr = std::unique_ptr<ClientRequest>;
@@ -20,13 +21,33 @@ private:
                               std::function<ClientRequestPtr()>> s_requestsFac;
 };
 
-class TestRequest : public ClientRequest
+namespace Requests
 {
-public:
-    void handle(BotServer& server) override
+    class Test : public ClientRequest
     {
-        server.sendMessageToClient("Test successful");
-    }
+    public:
+        void handle(BotServer& server) override
+        {
+            server.sendMessageToClient("Test successful");
+        }
 
-    bool Parse(std::string_view) override { return true; }
-};
+        bool Parse(std::string_view) override { return true; }
+    };
+
+    class Connect : public ClientRequest
+    {
+    public:
+        void handle(BotServer& server) override
+        {
+            auto botPtr =
+                std::make_shared<Bot>(m_name, std::make_unique<DefaultBehavior>(), server);
+            if (server.connect(move(botPtr)))
+                server.sendMessageToClient("Successfully connected");
+            else
+                server.sendMessageToClient("Error connecting bot");
+        }
+        bool Parse(std::string_view) override;
+    private:
+        std::string m_name;
+    };
+}

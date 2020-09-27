@@ -29,9 +29,12 @@ int main(int argc, char* argv[])
         while (true)
         {
             std::cout << "> ";
-            char request[max_length];
-            std::cin.getline(request, max_length);
-            size_t request_length = std::strlen(request);
+            std::string request;
+            request.reserve(max_length);
+            std::getline(std::cin, request);
+            size_t request_length = request.length();
+            if (request == "stop")
+                break;
             asio::write(s, asio::buffer(request, request_length));
 
             char reply[max_length];

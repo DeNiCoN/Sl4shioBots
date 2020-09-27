@@ -70,11 +70,14 @@ protected:
 	Bot* bot;
 };
 
+using VBehaviorPtr = std::unique_ptr<VBehavior>;
 class Bot
 {
 	friend class BotServer;
 public:
-	Bot(std::string name, VBehavior& behavior, BotServer& world) : name(name), behavior(behavior), world(world), view(world) { behavior.bot = this; }
+	Bot(std::string name, VBehaviorPtr behavior, BotServer& world)
+			: name(name), behavior(move(behavior)), world(world), view(world)
+			{ this->behavior->bot = this; }
 	std::string getName() const { return name; }
 	websocketpp::connection_hdl getConnectionHandle() const { return connection_hdl; }
 	void setAngle(float angle);
@@ -91,7 +94,7 @@ private:
 	websocketpp::connection_hdl connection_hdl;
 	std::string name;
 	uint32_t id;
-	VBehavior& behavior;
+	VBehaviorPtr behavior;
 	BotServer& world;
 	GameView view;
 };

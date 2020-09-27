@@ -60,6 +60,7 @@ private:
 	asio::ip::tcp::socket current_socket {io_context};
 	uint16_t server_port;
 	std::vector<Bot_ptr> activeBots;
+	std::vector<Bot_ptr> connectedBots;
 	bool m_shouldClose = false;
 
 

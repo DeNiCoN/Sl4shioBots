@@ -32,7 +32,6 @@ class DefaultBehavior : public VBehavior
 		{
 			Upgrades up = (Upgrades)(rand() % 6);
 			bot->upgrade(up); 
-			std::cout << "Upgrade: " << up << "\n";
 		}
 	}
 private:

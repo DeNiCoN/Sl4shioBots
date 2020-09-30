@@ -69,7 +69,14 @@ void DefaultBehavior::update(std::chrono::duration<double> delta)
 		} 
 		else
 		{
-			nearestPos = vec2Sub(bot->getGameView().getMain()->getPosition(), {200.0, 200.0});
+			vec2 leaderRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), bot->getGameView().getLeaderPos());
+
+			if (vec2Length(leaderRelativePos) < 10)
+				nearestPos = vec2Sub(bot->getGameView().getMain()->getPosition(), {200.0, 200.0});
+			else
+				nearestPos = leaderRelativePos;
+
+			angle = utils::clockwiseAngle(nearestPos);
 		}
 		bot->setAngle(angle);
 		if (vec2LengthSquared(nearestPos) < 168)

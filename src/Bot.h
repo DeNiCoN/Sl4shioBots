@@ -35,25 +35,25 @@ using Bot_ptr = std::shared_ptr<Bot>;
 
 struct BotStats
 {
-	unsigned int kills;
-	unsigned int deaths;
-	unsigned int shieldUsed;
-	unsigned int maxDashCombo;
-	unsigned int dashes;
-	unsigned int maxLevel;
-	unsigned int damageGot;
-	unsigned int damageDealt;
+	unsigned int kills = 0;
+	unsigned int deaths = 0;
+	unsigned int shieldUsed = 0;
+	unsigned int maxDashCombo = 0;
+	unsigned int dashes = 0;
+	unsigned int maxLevel = 0;
+	unsigned int damageGot = 0;
+	unsigned int damageDealt = 0;
 };
 
 struct BotState
 {
 	vec2 position;
-	unsigned int exp;
-	unsigned int lvl;
-	unsigned int dashCooldown;
-	unsigned int dashCombo;
-	float vision;
-	uint8_t upgradesAvailable;
+	unsigned int exp = 0;
+	unsigned int lvl = 0;
+	unsigned int dashCooldown = 0;
+	unsigned int dashCombo = 0;
+	float vision = 0;
+	uint8_t upgradesAvailable = 0;
 	Arrows arrow;
 
 };
@@ -87,6 +87,7 @@ public:
 
 	const GameView& getGameView() const { return view; }
 	const BotState& getBotState() const { return state; }
+	const BotStats& getBotStats() const { return stats; }
 	uint32_t getId() const { return id; }
 private:
 	void leave();

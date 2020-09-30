@@ -51,6 +51,66 @@ namespace Requests
         std::string m_name;
     };
 
+    class Stats : public ClientRequest
+    {
+    public:
+        void handle(BotServer& server) override
+        {
+            if (server.getConnectedBots().count(m_name))
+            {
+                const auto& botStats = server.getConnectedBots().at(m_name)->getBotStats();
+                server.sendMessageToClient("\nkills: " + std::to_string(botStats.kills)
+                                           + "\ndeaths: " + std::to_string(botStats.deaths)
+                                           + "\nshieldUsed: " + std::to_string(botStats.shieldUsed)
+                                           + "\nmaxDashCombo: " + std::to_string(botStats.maxDashCombo)
+                                           + "\ndashes: " + std::to_string(botStats.dashes)
+                                           + "\nmaxLevel: " + std::to_string(botStats.maxLevel)
+                                           + "\ndamageGot: " + std::to_string(botStats.damageGot)
+                                           + "\ndamageDealt: " + std::to_string(botStats.damageDealt));
+            }
+            else
+            {
+                server.sendMessageToClient("Bot not found");
+            }
+        }
+        bool Parse(std::string_view) override;
+    private:
+        std::string m_name;
+    };
+
+    class State : public ClientRequest
+    {
+    public:
+        void handle(BotServer& server) override
+        {
+            if (std::count_if(server.getActiveBots().begin(), server.getActiveBots().end(),
+                              [this](const auto& bot) { return m_name == bot->getName(); }))
+            {
+                const auto& botStats = server.getConnectedBots().at(m_name)->getBotState();
+                const auto& botView = server.getConnectedBots().at(m_name)->getGameView().getMain();
+                server.sendMessageToClient("\nposition: " + std::to_string(botView->position.x)
+                                           + "," + std::to_string(botView->position.y)
+                                           + "\nlvl: " + std::to_string(botView->level)
+                                           + "\ndashCooldown: "
+                                           + std::to_string(botView->cooldown)
+                                           + "\nmaxHp: "
+                                           + std::to_string(botView->maxHp)
+                                           + "\nhp: " + std::to_string(botView->hp)
+                                           + "\nupgradesAvailable: "
+                                           + std::to_string(botStats.upgradesAvailable)
+                                           + "\narrow: "
+                                           + std::to_string((int)botView->type));
+            }
+            else
+            {
+                server.sendMessageToClient("Bot not found");
+            }
+        }
+        bool Parse(std::string_view) override;
+    private:
+        std::string m_name;
+    };
+
     class Disconnect : public ClientRequest
     {
     public:

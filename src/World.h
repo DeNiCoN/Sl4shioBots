@@ -51,6 +51,9 @@ public:
 	bool disconnect(const std::string& name);
 	void close() { m_shouldClose = true; }
 	void sendMessageToClient(std::string_view);
+	const std::vector<Bot_ptr>& getActiveBots() const { return activeBots; }
+	const std::unordered_map<std::string, Bot_ptr> getConnectedBots() const
+	{ return connectedBots; }
 private:
 	void init();
 	void update(std::chrono::duration<double> delta);

@@ -123,7 +123,6 @@ void GameView::sync(const char* payload)
 				arrow->sync(&payload);
 				if (arrow->isMain())
 					continue;
-				std::cout << "New arrow: " << id << "|" << arrow->name << '\n';
 				arrows[id] = arrow;
 			}
 			else
@@ -145,7 +144,6 @@ void GameView::sync(const char* payload)
 				payload += arrow->name.size() + 1;
 				arrow->type = static_cast<Arrows>(Messages::read<uint8_t>(&payload));
 				arrow->sync(&payload);
-				std::cout << "New arrow: " << id << "|" << arrow->name << '\n';
 			}
 		}
 	}
@@ -189,7 +187,6 @@ void GameView::destroyGoom(uint32_t id)
 void GameView::destroyArrow(uint32_t id)
 {
 	auto a = arrows.find(id);
-	std::cout << "Arrow delete: " << id << '\n';
 	if (id != this->id && a != arrows.end())
 	{
 		poolFree(&arrowAlloc, (*a).second);

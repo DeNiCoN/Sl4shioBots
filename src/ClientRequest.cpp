@@ -35,6 +35,8 @@ std::unordered_map<std::string_view,
 {
     {"test", []() { return make_unique<Requests::Test>(); }},
     {"connect", []() { return make_unique<Requests::Connect>(); }},
+    {"stats", []() { return make_unique<Requests::Stats>(); }},
+    {"state", []() { return make_unique<Requests::State>(); }},
     {"disconnect", []() { return make_unique<Requests::Disconnect>(); }}
 };
 
@@ -47,6 +49,18 @@ namespace Requests
     }
 
     bool Disconnect::Parse(std::string_view str)
+    {
+        m_name = str;
+        return true;
+    }
+
+    bool Stats::Parse(std::string_view str)
+    {
+        m_name = str;
+        return true;
+    }
+
+    bool State::Parse(std::string_view str)
     {
         m_name = str;
         return true;

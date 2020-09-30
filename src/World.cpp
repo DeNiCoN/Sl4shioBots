@@ -400,6 +400,7 @@ int main(int argc, char** argv)
 
 	BotServer server(uri, port);
 
+	srand(time(NULL));
 	server.run(std::chrono::duration<double>(1.0/60.0));
 
     return 0;

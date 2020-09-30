@@ -91,7 +91,6 @@ public:
 	bool isAttackReady() const { return attackReady; }
 	bool isShieldReady() const { return shieldReady; }
 	bool isMain() const { return main; }
-private:
 	vec2 position;
 	vec2 velocity;
 	std::string name;

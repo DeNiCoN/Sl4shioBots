@@ -48,6 +48,7 @@ public:
 	~BotServer();
 	bool run(std::chrono::duration<double>);
 	bool connect(Bot_ptr bot);
+	bool disconnect(const std::string& name);
 	void close() { m_shouldClose = true; }
 	void sendMessageToClient(std::string_view);
 private:
@@ -60,9 +61,8 @@ private:
 	asio::ip::tcp::socket current_socket {io_context};
 	uint16_t server_port;
 	std::vector<Bot_ptr> activeBots;
-	std::vector<Bot_ptr> connectedBots;
+	std::unordered_map<std::string, Bot_ptr> connectedBots;
 	bool m_shouldClose = false;
-
 
 	websocketpp::lib::mutex messageQueueMutex;
 	std::queue<std::pair<Bot_ptr, client::message_ptr>> messagesQueue;

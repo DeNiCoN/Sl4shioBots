@@ -24,7 +24,6 @@ SOFTWARE.
 #include "Bot.h"
 #include "Messages.hpp"
 
-
 void Bot::setAngle(float angle)
 {
 	world.endpoint.send(connection_hdl, Messages::setAngle(angle), websocketpp::frame::opcode::BINARY);
@@ -40,6 +39,10 @@ void Bot::shield()
 	world.endpoint.send(connection_hdl, Messages::shield(), websocketpp::frame::opcode::BINARY);
 }
 
+void Bot::leave()
+{
+	world.endpoint.send(connection_hdl, Messages::leave(), websocketpp::frame::opcode::BINARY);
+}
 void Bot::upgrade(Upgrades upgrade)
 {
 	world.endpoint.send(connection_hdl, Messages::upgrade(upgrade), websocketpp::frame::opcode::BINARY);

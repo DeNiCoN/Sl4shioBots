@@ -78,7 +78,7 @@ public:
 	Bot(std::string name, VBehaviorPtr behavior, BotServer& world)
 			: name(name), behavior(move(behavior)), world(world), view(world)
 			{ this->behavior->bot = this; }
-	std::string getName() const { return name; }
+	const std::string& getName() const { return name; }
 	websocketpp::connection_hdl getConnectionHandle() const { return connection_hdl; }
 	void setAngle(float angle);
 	void dash(float angle);
@@ -89,6 +89,7 @@ public:
 	const BotState& getBotState() const { return state; }
 	uint32_t getId() const { return id; }
 private:
+	void leave();
 	BotStats stats;
 	BotState state;
 	websocketpp::connection_hdl connection_hdl;

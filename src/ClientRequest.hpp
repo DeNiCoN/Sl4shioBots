@@ -50,4 +50,23 @@ namespace Requests
     private:
         std::string m_name;
     };
+
+    class Disconnect : public ClientRequest
+    {
+    public:
+        void handle(BotServer& server) override
+        {
+            if (server.disconnect(m_name))
+            {
+                server.sendMessageToClient("Successfully disconnected");
+            }
+            else
+            {
+                server.sendMessageToClient("Bot not found");
+            }
+        }
+        bool Parse(std::string_view) override;
+    private:
+        std::string m_name;
+    };
 }

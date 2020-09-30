@@ -34,12 +34,19 @@ std::unordered_map<std::string_view,
                    std::function<ClientRequestPtr()>> ClientRequest::s_requestsFac =
 {
     {"test", []() { return make_unique<Requests::Test>(); }},
-    {"connect", []() { return make_unique<Requests::Connect>(); }}
+    {"connect", []() { return make_unique<Requests::Connect>(); }},
+    {"disconnect", []() { return make_unique<Requests::Disconnect>(); }}
 };
 
 namespace Requests
 {
     bool Connect::Parse(std::string_view str)
+    {
+        m_name = str;
+        return true;
+    }
+
+    bool Disconnect::Parse(std::string_view str)
     {
         m_name = str;
         return true;

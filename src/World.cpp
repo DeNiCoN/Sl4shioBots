@@ -37,12 +37,10 @@ BotServer::BotServer(std::string uri, uint16_t server_port)
 
 	endpoint.set_open_handler(bind([&](client* c, websocketpp::connection_hdl hdl)
 	{
-		std::cout << "Successfully connected\n";
 		endpoint.send(hdl, " ", websocketpp::frame::opcode::TEXT);
 	}, &endpoint, ::_1));
 	endpoint.set_fail_handler(bind([&](client* c, websocketpp::connection_hdl hdl)
 	{
-		std::cout << "Failed to connect\n";
 	}, &endpoint, ::_1));
 
 	endpoint.init_asio();
@@ -56,6 +54,10 @@ BotServer::~BotServer()
 	endpoint.stop_perpetual();
 	endpoint_thread->join();
 	activeBots.clear();
+	for (const auto& [name, bot] : connectedBots)
+	{
+		bot->leave();
+	}
 }
 
 void BotServer::sendMessageToClient(std::string_view str)
@@ -168,8 +170,28 @@ bool BotServer::connect(Bot_ptr bot)
 	});
 
 	endpoint.connect(connection);
-	connectedBots.push_back(bot);
+	connectedBots[bot->getName()] = bot;
 	return true;
+}
+
+bool BotServer::disconnect(const std::string& name)
+{
+	auto it = std::find_if(activeBots.begin(), activeBots.end(), [&name](const Bot_ptr ptr)
+	{
+		return ptr->getName() == name;
+	});
+
+	if (it != activeBots.end())
+	{
+		activeBots.erase(it);
+	}
+	if (connectedBots.count(name))
+	{
+		connectedBots.at(name)->leave();
+		connectedBots.erase(name);
+		return true;
+	}
+	return false;
 }
 
 void BotServer::handleMessage(std::pair<Bot_ptr, client::message_ptr> entry)
@@ -207,7 +229,6 @@ void BotServer::handleMessage(std::pair<Bot_ptr, client::message_ptr> entry)
 
 void BotServer::onSetup(Bot_ptr bot, const char* payload)
 {
-	std::cout << "setup\n";
 	bot->id = Messages::read<uint32_t>(&payload);
 	bot->view.id = bot->id;
 	endpoint.send(bot->getConnectionHandle(), Messages::setObsPos(Messages::read<vec2>(&payload)), websocketpp::frame::opcode::BINARY);
@@ -215,7 +236,6 @@ void BotServer::onSetup(Bot_ptr bot, const char* payload)
 }
 void BotServer::onStartPlaying(Bot_ptr bot, const char* payload)
 {
-	std::cout << "start playing\n";
 	bot->state.upgradesAvailable = Messages::read<uint8_t>(&payload);
 	bot->state.vision = Messages::read<float>(&payload);
 	activeBots.push_back(bot);
@@ -224,7 +244,6 @@ void BotServer::onStartPlaying(Bot_ptr bot, const char* payload)
 
 void BotServer::onGameOver(Bot_ptr bot, const char* payload)
 {
-	std::cout << "game over\n";
 
 	activeBots.erase(std::find(activeBots.begin(), activeBots.end(), bot));
 	bot->view.reset();
@@ -236,7 +255,6 @@ void BotServer::onGameOver(Bot_ptr bot, const char* payload)
 
 void BotServer::onSpecArrow(Bot_ptr bot, const char* payload)
 {
-	std::cout << "spec arrow\n";
 }
 
 void BotServer::onSync(Bot_ptr bot, const char* payload)
@@ -250,64 +268,53 @@ void BotServer::onSync(Bot_ptr bot, const char* payload)
 
 void BotServer::onDamage(Bot_ptr bot, const char* payload)
 {
-	std::cout << "damage\n";
 }
 
 void BotServer::onDestroyArrow(Bot_ptr bot, const char* payload)
 {
-	std::cout << "destroy arrow\n";
 	uint32_t id = Messages::read<uint32_t>(&payload);
 	bot->view.destroyArrow(id);
 }
 
 void BotServer::onDashArrow(Bot_ptr bot, const char* payload)
 {
-	std::cout << "dash arrow\n";
 }
 
 void BotServer::onDestroyGoom(Bot_ptr bot, const char* payload)
 {
-	std::cout << "destroy goom\n";
 	uint32_t id = Messages::read<uint32_t>(&payload);
 	bot->view.destroyGoom(id);
 }
 
 void BotServer::onHitGoom(Bot_ptr bot, const char* payload)
 {
-	std::cout << "hit goom\n";
 }
 
 void BotServer::onHitArrow(Bot_ptr bot, const char* payload)
 {
-	std::cout << "hit arrow";
 }
 
 void BotServer::onRecoilArrow(Bot_ptr bot, const char* payload)
 {
-	std::cout << "recoil arrow";
 }
 
 void BotServer::onEatGoo(Bot_ptr bot, const char* payload)
 {
-	std::cout << "eat goo\n";
-	
+
 }
 
 void BotServer::onUpgradesAvailable(Bot_ptr bot, const char* payload)
 {
-	std::cout << "upgrades available\n";
 	bot->behavior->onUpgradeAvailable(Messages::read<uint8_t>(&payload));
 }
 
 void BotServer::onSetVision(Bot_ptr bot, const char* payload)
 {
-	std::cout << "set vision\n";
 	bot->state.vision = Messages::read<float>(&payload);
 }
 
 void BotServer::onDash(Bot_ptr bot, const char* payload)
 {
-	std::cout << "dash\n";
 	//bot->view.main->cooldown = Messages::read<uint32_t>(&payload);
 	//bot->view.main->attackReady = false;
 	bot->stats.dashes++;
@@ -315,7 +322,6 @@ void BotServer::onDash(Bot_ptr bot, const char* payload)
 
 void BotServer::onDashCombo(Bot_ptr bot, const char* payload)
 {
-	std::cout << "dash combo\n";
 	//bot->view.main->cooldown = 0;
 	//bot->view.main->attackReady = true;
 	if ((bot->state.dashCombo = Messages::read<uint32_t>(&payload)) > bot->stats.maxDashCombo)
@@ -327,24 +333,20 @@ void BotServer::onDashCombo(Bot_ptr bot, const char* payload)
 
 void BotServer::onShield(Bot_ptr bot, const char* payload)
 {
-	std::cout << "shield\n";
 }
 
 void BotServer::onShieldUsed(Bot_ptr bot, const char* payload)
 {
 	bot->stats.shieldUsed++;
-	std::cout << "shield used\n";
 }
 
 void BotServer::onKill(Bot_ptr bot, const char* payload)
 {
-	std::cout << "kill\n";
 	bot->stats.kills++;
 }
 
 void BotServer::onSetLeaderboard(Bot_ptr bot, const char* payload)
 {
-	std::cout << "set leaderboard\n";
 }
 
 std::stringstream g_stream;
@@ -395,7 +397,6 @@ int main(int argc, char** argv)
 	uint16_t port = 34534;
 
 	std::string uri = getServerIpPort("http://sl4sh.io/servers.json");
-	std::cout << uri << std::endl;
 
 	BotServer server(uri, port);
 

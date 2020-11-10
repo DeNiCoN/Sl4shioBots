@@ -21,20 +21,23 @@
 */
 
 #include "Bot.hpp"
-
-class DefaultBehavior : public VBehavior
+namespace Bots
 {
-    virtual void onPlayingStart() override;
-    virtual void update(std::chrono::duration<double> delta) override;
-    virtual void onUpgradeAvailable(uint8_t count) override
+
+    class DefaultBehavior : public VBehavior
     {
-        for (int i = 0; i < count; i++)
+        virtual void onPlayingStart() override;
+        virtual void update(std::chrono::duration<double> delta) override;
+        virtual void onUpgradeAvailable(uint8_t count) override
         {
-            Upgrades up = (Upgrades)(rand() % 6);
-            bot->upgrade(up);
+            for (int i = 0; i < count; i++)
+            {
+                Upgrades up = (Upgrades)(rand() % 6);
+                bot->upgrade(up);
+            }
         }
-    }
-private:
-    std::chrono::duration<double> delay;
-    std::chrono::duration<double> updateDelay{ 0.2 };
-};
+    private:
+        std::chrono::duration<double> delay;
+        std::chrono::duration<double> updateDelay{ 0.2 };
+    };
+}

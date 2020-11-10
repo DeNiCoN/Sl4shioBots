@@ -2,67 +2,70 @@
 
 using namespace std;
 
-std::string_view readToken(std::string_view& str, char separator = ' ')
+namespace Bots
 {
-    size_t pos = str.find(separator);
-    std::string_view result = str.substr(0, pos);
-    if (pos == str.npos || str.length() < pos + 1)
-        str.remove_prefix(str.length());
-    else
-        str.remove_prefix(pos + 1);
-    return result;
-}
-
-ClientRequestPtr ClientRequest::ParseRequest(std::string_view str)
-{
-    auto it = s_requestsFac.find(readToken(str));
-    if (it != s_requestsFac.end())
+    std::string_view readToken(std::string_view& str, char separator = ' ')
     {
-        auto ptr = it->second();
-
-        if (ptr->Parse(str))
-            return ptr;
-        return nullptr;
-    }
-    else
-    {
-        return nullptr;
-    }
-}
-
-std::unordered_map<std::string_view,
-                   std::function<ClientRequestPtr()>> ClientRequest::s_requestsFac =
-{
-    {"test", []() { return make_unique<Requests::Test>(); }},
-    {"connect", []() { return make_unique<Requests::Connect>(); }},
-    {"stats", []() { return make_unique<Requests::Stats>(); }},
-    {"state", []() { return make_unique<Requests::State>(); }},
-    {"disconnect", []() { return make_unique<Requests::Disconnect>(); }}
-};
-
-namespace Requests
-{
-    bool Connect::Parse(std::string_view str)
-    {
-        m_name = str;
-        return true;
+        size_t pos = str.find(separator);
+        std::string_view result = str.substr(0, pos);
+        if (pos == str.npos || str.length() < pos + 1)
+            str.remove_prefix(str.length());
+        else
+            str.remove_prefix(pos + 1);
+        return result;
     }
 
-    bool Disconnect::Parse(std::string_view str)
+    ClientRequestPtr ClientRequest::ParseRequest(std::string_view str)
     {
-        m_name = str;
-        return true;
+        auto it = s_requestsFac.find(readToken(str));
+        if (it != s_requestsFac.end())
+        {
+            auto ptr = it->second();
+
+            if (ptr->Parse(str))
+                return ptr;
+            return nullptr;
+        }
+        else
+        {
+            return nullptr;
+        }
     }
 
-    bool Stats::Parse(std::string_view str)
+    std::unordered_map<std::string_view,
+                       std::function<ClientRequestPtr()>> ClientRequest::s_requestsFac =
     {
-        m_name = str;
-        return true;
-    }
+        {"test", []() { return make_unique<Requests::Test>(); }},
+        {"connect", []() { return make_unique<Requests::Connect>(); }},
+        {"stats", []() { return make_unique<Requests::Stats>(); }},
+        {"state", []() { return make_unique<Requests::State>(); }},
+        {"disconnect", []() { return make_unique<Requests::Disconnect>(); }}
+    };
 
-    bool State::Parse(std::string_view str)
+    namespace Requests
     {
-        m_name = str;
-        return true;
+        bool Connect::Parse(std::string_view str)
+        {
+            m_name = str;
+            return true;
+        }
+
+        bool Disconnect::Parse(std::string_view str)
+        {
+            m_name = str;
+            return true;
+        }
+
+        bool Stats::Parse(std::string_view str)
+        {
+            m_name = str;
+            return true;
+        }
+
+        bool State::Parse(std::string_view str)
+        {
+            m_name = str;
+            return true;
+        }
     }
 }

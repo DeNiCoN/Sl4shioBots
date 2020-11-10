@@ -31,69 +31,72 @@
 #include "Bot.hpp"
 #include <list>
 
-typedef websocketpp::client<websocketpp::config::asio_client> client;
-
-using websocketpp::lib::placeholders::_1;
-using websocketpp::lib::placeholders::_2;
-
-class Goom;
-class Arrow;
-class ClientRequest;
-
-class BotServer
+namespace Bots
 {
-    friend class Bot;
-public:
-    BotServer(std::string uri, uint16_t port);
-    ~BotServer();
-    bool run(std::chrono::duration<double>);
-    bool connect(Bot_ptr bot);
-    bool disconnect(const std::string& name);
-    void close() { m_shouldClose = true; }
-    void sendMessageToClient(std::string_view);
-    const std::vector<Bot_ptr>& getActiveBots() const { return activeBots; }
-    const std::unordered_map<std::string, Bot_ptr> getConnectedBots() const
-    { return connectedBots; }
-private:
-    void init();
-    void update(std::chrono::duration<double> delta);
+    typedef websocketpp::client<websocketpp::config::asio_client> client;
 
-    std::string uri;
+    using websocketpp::lib::placeholders::_1;
+    using websocketpp::lib::placeholders::_2;
 
-    asio::io_context io_context;
-    asio::ip::tcp::socket current_socket {io_context};
-    uint16_t server_port;
-    std::vector<Bot_ptr> activeBots;
-    std::unordered_map<std::string, Bot_ptr> connectedBots;
-    bool m_shouldClose = false;
+    class Goom;
+    class Arrow;
+    class ClientRequest;
 
-    websocketpp::lib::mutex messageQueueMutex;
-    std::queue<std::pair<Bot_ptr, client::message_ptr>> messagesQueue;
-    std::queue<std::unique_ptr<ClientRequest>> requestsQueue;
-    websocketpp::lib::shared_ptr<websocketpp::lib::thread> endpoint_thread;
-    client endpoint;
+    class BotServer
+    {
+        friend class Bot;
+    public:
+        BotServer(std::string uri, uint16_t port);
+        ~BotServer();
+        bool run(std::chrono::duration<double>);
+        bool connect(Bot_ptr bot);
+        bool disconnect(const std::string& name);
+        void close() { m_shouldClose = true; }
+        void sendMessageToClient(std::string_view);
+        const std::vector<Bot_ptr>& getActiveBots() const { return activeBots; }
+        const std::unordered_map<std::string, Bot_ptr> getConnectedBots() const
+        { return connectedBots; }
+    private:
+        void init();
+        void update(std::chrono::duration<double> delta);
 
-    void handleMessage(std::pair<Bot_ptr, client::message_ptr> entry);
+        std::string uri;
 
-    void onSetup(Bot_ptr bot, const char* payload);
-    void onStartPlaying(Bot_ptr bot, const char* payload);
-    void onGameOver(Bot_ptr bot, const char* payload);
-    void onSpecArrow(Bot_ptr bot, const char* payload);
-    void onSync(Bot_ptr bot, const char* payload);
-    void onDamage(Bot_ptr bot, const char* payload);
-    void onDestroyArrow(Bot_ptr bot, const char* payload);
-    void onDashArrow(Bot_ptr bot, const char* payload);
-    void onDestroyGoom(Bot_ptr bot, const char* payload);
-    void onHitGoom(Bot_ptr bot, const char* payload);
-    void onHitArrow(Bot_ptr bot, const char* payload);
-    void onRecoilArrow(Bot_ptr bot, const char* payload);
-    void onEatGoo(Bot_ptr bot, const char* payload);
-    void onUpgradesAvailable(Bot_ptr bot, const char* payload);
-    void onSetVision(Bot_ptr bot, const char* payload);
-    void onDash(Bot_ptr bot, const char* payload);
-    void onDashCombo(Bot_ptr bot, const char* payload);
-    void onShield(Bot_ptr bot, const char* payload);
-    void onShieldUsed(Bot_ptr bot, const char* payload);
-    void onKill(Bot_ptr bot, const char* payload);
-    void onSetLeaderboard(Bot_ptr bot, const char* payload);
-};
+        asio::io_context io_context;
+        asio::ip::tcp::socket current_socket {io_context};
+        uint16_t server_port;
+        std::vector<Bot_ptr> activeBots;
+        std::unordered_map<std::string, Bot_ptr> connectedBots;
+        bool m_shouldClose = false;
+
+        websocketpp::lib::mutex messageQueueMutex;
+        std::queue<std::pair<Bot_ptr, client::message_ptr>> messagesQueue;
+        std::queue<std::unique_ptr<ClientRequest>> requestsQueue;
+        websocketpp::lib::shared_ptr<websocketpp::lib::thread> endpoint_thread;
+        client endpoint;
+
+        void handleMessage(std::pair<Bot_ptr, client::message_ptr> entry);
+
+        void onSetup(Bot_ptr bot, const char* payload);
+        void onStartPlaying(Bot_ptr bot, const char* payload);
+        void onGameOver(Bot_ptr bot, const char* payload);
+        void onSpecArrow(Bot_ptr bot, const char* payload);
+        void onSync(Bot_ptr bot, const char* payload);
+        void onDamage(Bot_ptr bot, const char* payload);
+        void onDestroyArrow(Bot_ptr bot, const char* payload);
+        void onDashArrow(Bot_ptr bot, const char* payload);
+        void onDestroyGoom(Bot_ptr bot, const char* payload);
+        void onHitGoom(Bot_ptr bot, const char* payload);
+        void onHitArrow(Bot_ptr bot, const char* payload);
+        void onRecoilArrow(Bot_ptr bot, const char* payload);
+        void onEatGoo(Bot_ptr bot, const char* payload);
+        void onUpgradesAvailable(Bot_ptr bot, const char* payload);
+        void onSetVision(Bot_ptr bot, const char* payload);
+        void onDash(Bot_ptr bot, const char* payload);
+        void onDashCombo(Bot_ptr bot, const char* payload);
+        void onShield(Bot_ptr bot, const char* payload);
+        void onShieldUsed(Bot_ptr bot, const char* payload);
+        void onKill(Bot_ptr bot, const char* payload);
+        void onSetLeaderboard(Bot_ptr bot, const char* payload);
+    };
+}

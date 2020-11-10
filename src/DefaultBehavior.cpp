@@ -22,66 +22,68 @@
 
 #include "DefaultBehavior.hpp"
 #include "Utils.hpp"
-
-void DefaultBehavior::onPlayingStart()
+namespace Bots
 {
-    bot->setAngle(0);
-}
-
-void DefaultBehavior::update(std::chrono::duration<double> delta)
-{
-    delay += delta;
-    if (delay > updateDelay)
+    void DefaultBehavior::onPlayingStart()
     {
-        delay = std::chrono::duration<double>(0);
-        const Arrow* arrow = bot->getGameView().nearestArrow(bot->getGameView().getMain()->getPosition());
-        const Goom* goom = bot->getGameView().nearestGoom(bot->getGameView().getMain()->getPosition());
-        float angle;
-        vec2 arrowRelativePos;
-        vec2 goomRelativePos;
-        vec2 nearestPos;
-        if (arrow && goom)
+        bot->setAngle(0);
+    }
+
+    void DefaultBehavior::update(std::chrono::duration<double> delta)
+    {
+        delay += delta;
+        if (delay > updateDelay)
         {
-            arrowRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), arrow->getPosition());
-            goomRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), goom->getPosition());
-            if (vec2LengthSquared(goomRelativePos) < vec2LengthSquared(arrowRelativePos))
+            delay = std::chrono::duration<double>(0);
+            const Arrow* arrow = bot->getGameView().nearestArrow(bot->getGameView().getMain()->getPosition());
+            const Goom* goom = bot->getGameView().nearestGoom(bot->getGameView().getMain()->getPosition());
+            float angle;
+            vec2 arrowRelativePos;
+            vec2 goomRelativePos;
+            vec2 nearestPos;
+            if (arrow && goom)
             {
+                arrowRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), arrow->getPosition());
+                goomRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), goom->getPosition());
+                if (vec2LengthSquared(goomRelativePos) < vec2LengthSquared(arrowRelativePos))
+                {
+                    angle = utils::clockwiseAngle(goomRelativePos);
+                    nearestPos = goomRelativePos;
+                }
+                else
+                {
+                    angle = utils::clockwiseAngle(arrowRelativePos);
+                    nearestPos = arrowRelativePos;
+                }
+            }
+            else if (goom)
+            {
+                goomRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), goom->getPosition());
                 angle = utils::clockwiseAngle(goomRelativePos);
                 nearestPos = goomRelativePos;
             }
-            else
+            else if (arrow)
             {
+                arrowRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), arrow->getPosition());
                 angle = utils::clockwiseAngle(arrowRelativePos);
                 nearestPos = arrowRelativePos;
             }
-        }
-        else if (goom)
-        {
-            goomRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), goom->getPosition());
-            angle = utils::clockwiseAngle(goomRelativePos);
-            nearestPos = goomRelativePos;
-        }
-        else if (arrow)
-        {
-            arrowRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), arrow->getPosition());
-            angle = utils::clockwiseAngle(arrowRelativePos);
-            nearestPos = arrowRelativePos;
-        }
-        else
-        {
-            vec2 leaderRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), bot->getGameView().getLeaderPos());
-
-            if (vec2Length(leaderRelativePos) < 10)
-                nearestPos = vec2Sub(bot->getGameView().getMain()->getPosition(), {200.0, 200.0});
             else
-                nearestPos = leaderRelativePos;
+            {
+                vec2 leaderRelativePos = vec2Sub(bot->getGameView().getMain()->getPosition(), bot->getGameView().getLeaderPos());
 
-            angle = utils::clockwiseAngle(nearestPos);
+                if (vec2Length(leaderRelativePos) < 10)
+                    nearestPos = vec2Sub(bot->getGameView().getMain()->getPosition(), {200.0, 200.0});
+                else
+                    nearestPos = leaderRelativePos;
+
+                angle = utils::clockwiseAngle(nearestPos);
+            }
+            bot->setAngle(angle);
+            if (vec2LengthSquared(nearestPos) < 168)
+            {
+                bot->dash(angle);
+            }
         }
-        bot->setAngle(angle);
-        if (vec2LengthSquared(nearestPos) < 168)
-        {
-			bot->dash(angle);
-		}
-	}
+    }
 }

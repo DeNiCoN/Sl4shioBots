@@ -1,5 +1,5 @@
 /*
-  Copyright(c) 2019 DeNiCoN
+  Copyright(c) 2020 DeNiCoN
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this softwareand associated documentation files(the "Software"), to deal

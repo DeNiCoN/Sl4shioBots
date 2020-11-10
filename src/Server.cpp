@@ -1,5 +1,5 @@
 /*
-  Copyright(c) 2019 DeNiCoN
+  Copyright(c) 2020 DeNiCoN
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this softwareand associated documentation files(the "Software"), to deal
@@ -40,10 +40,10 @@ namespace Bots
         endpoint.set_open_handler(bind([&](client* c, websocketpp::connection_hdl hdl)
         {
             endpoint.send(hdl, " ", websocketpp::frame::opcode::TEXT);
-        }, &endpoint, ::_1));
+        }, &endpoint, ::Bots::_1));
         endpoint.set_fail_handler(bind([&](client* c, websocketpp::connection_hdl hdl)
         {
-        }, &endpoint, ::_1));
+        }, &endpoint, ::Bots::_1));
 
         endpoint.init_asio();
         endpoint.start_perpetual();
@@ -351,60 +351,61 @@ namespace Bots
     {
     }
 
-    std::stringstream g_stream;
+}
 
-    size_t mywrite(char* c, size_t size, size_t nmemb, void* userp)
-    {
-        g_stream.write(static_cast<char*>(c), size*nmemb);
-        return size*nmemb;
-    }
+std::stringstream g_stream;
+
+size_t mywrite(char* c, size_t size, size_t nmemb, void* userp)
+{
+    g_stream.write(static_cast<char*>(c), size*nmemb);
+    return size*nmemb;
+}
 
 //sends http request through libcurl
 //and returns response through stream
 //very likely to be used only one time
-    std::istream& get(const char* url)
-    {
-        g_stream.clear();
-        CURL *curl;
-        CURLcode res;
+std::istream& get(const char* url)
+{
+    g_stream.clear();
+    CURL *curl;
+    CURLcode res;
 
-        curl_global_init(CURL_GLOBAL_ALL);
+    curl_global_init(CURL_GLOBAL_ALL);
 
-        curl = curl_easy_init();
-        if(curl) {
-            curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, url);
 
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mywrite);
-            res = curl_easy_perform(curl);
-            if(res != CURLE_OK)
-                fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                        curl_easy_strerror(res));
-            curl_easy_cleanup(curl);
-        }
-        curl_global_cleanup();
-        return g_stream;
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, mywrite);
+        res = curl_easy_perform(curl);
+        if(res != CURLE_OK)
+            fprintf(stderr, "curl_easy_perform() failed: %s\n",
+                    curl_easy_strerror(res));
+        curl_easy_cleanup(curl);
     }
+    curl_global_cleanup();
+    return g_stream;
+}
 
 //returns sl4sh io server ip and port
 //parses json
-    std::string getServerIpPort(const char* url)
-    {
-        nlohmann::json json;
-        get(url) >> json;
-        return json.front().front()["address"].get<std::string>();
-    }
+std::string getServerIpPort(const char* url)
+{
+    nlohmann::json json;
+    get(url) >> json;
+    return json.front().front()["address"].get<std::string>();
+}
 
-    int main(int argc, char** argv)
-    {
-        uint16_t port = 34534;
+int main(int argc, char** argv)
+{
+    uint16_t port = 34534;
 
-        std::string uri = getServerIpPort("http://sl4sh.io/servers.json");
+    std::string uri = getServerIpPort("http://sl4sh.io/servers.json");
 
-        BotServer server(uri, port);
+    Bots::BotServer server(uri, port);
 
-        srand(time(NULL));
-        server.run(std::chrono::duration<double>(1.0/60.0));
+    srand(time(NULL));
+    server.run(std::chrono::duration<double>(1.0/60.0));
 
-        return 0;
-    }
+    return 0;
 }

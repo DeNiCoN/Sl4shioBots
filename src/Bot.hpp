@@ -25,7 +25,7 @@ SOFTWARE.
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
 #include <ctype.h>
-#include "GameView.h"
+#include "GameView.hpp"
 
 class Bot;
 class BotServer;

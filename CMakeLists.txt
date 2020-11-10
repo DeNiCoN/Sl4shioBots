@@ -10,19 +10,19 @@ set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(server
-"src/Bot.h"
+"src/Bot.hpp"
 "src/Bot.cpp"
-"src/World.h"
-"src/World.cpp"
+"src/Server.hpp"
+"src/Server.cpp"
 "src/linearmath.h"
 "src/poolAlloc.c"
 "src/poolAlloc.h"
-"src/DefaultBehavior.h"
+"src/DefaultBehavior.hpp"
 "src/DefaultBehavior.cpp"
-"src/GameView.h"
+"src/GameView.hpp"
 "src/GameView.cpp"
 "src/Utils.cpp"
-"src/Utils.h"
+"src/Utils.hpp"
 "src/ClientRequest.cpp"
 )
 

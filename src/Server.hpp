@@ -28,7 +28,7 @@ SOFTWARE.
 #include <string>
 #include <chrono>
 #include "linearmath.h"
-#include "Bot.h"
+#include "Bot.hpp"
 #include <list>
 
 typedef websocketpp::client<websocketpp::config::asio_client> client;

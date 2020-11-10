@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "World.h"
-#include "Bot.h"
+#include "Server.hpp"
+#include "Bot.hpp"
 #include "Messages.hpp"
 
 void Bot::setAngle(float angle)

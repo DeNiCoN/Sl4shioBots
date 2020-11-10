@@ -20,9 +20,9 @@
   SOFTWARE.
 */
 
-#include "GameView.h"
+#include "GameView.hpp"
 #include <array>
-#include "World.h"
+#include "Server.hpp"
 #include "Messages.hpp"
 #include <nlohmann/json.hpp>
 #include <curl/curl.h>

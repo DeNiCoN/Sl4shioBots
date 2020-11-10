@@ -1,9 +1,9 @@
 #pragma once
-#include "World.h"
+#include "Server.hpp"
 #include <string_view>
 #include <unordered_map>
 #include <memory>
-#include "DefaultBehavior.h"
+#include "DefaultBehavior.hpp"
 
 class ClientRequest;
 using ClientRequestPtr = std::unique_ptr<ClientRequest>;

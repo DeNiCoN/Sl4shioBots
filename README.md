@@ -1,6 +1,6 @@
 # Sl4shioBots
 ## About
-Bots for online browser game sl4sh.io writed using C++ with websocketpp and asio libraries.\ 
+Bots for online browser game sl4sh.io writed using C++ with websocketpp and asio libraries.\
 Command line interface is made as client-server application
 ## Build
 In order to build the CMake and git must be installed\

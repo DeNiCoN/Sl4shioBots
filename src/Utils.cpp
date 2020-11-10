@@ -5,8 +5,8 @@
 
 namespace utils
 {
-	float clockwiseAngle(vec2 dir)
-	{
-		return M_PI + atan2f(dir.y, dir.x);
-	}
+    float clockwiseAngle(vec2 dir)
+    {
+        return M_PI + atan2f(dir.y, dir.x);
+    }
 }
